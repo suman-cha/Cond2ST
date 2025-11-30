@@ -16,39 +16,43 @@ load_and_prepare_data <- function(file_path, scenario) {
                           ifelse(str_detect(scenario, "U"), "(U)", "(B)"))
   
   data$Scenario <- scenario_name
-  data$test_name <- factor(data$test_name, levels = unique(data$test_name))
-  data$extra_param <- factor(data$extra_param, levels = unique(data$extra_param))
+  # data$test_name <- factor(data$test_name, levels = unique(data$test_name))
+  # data$extra_param <- factor(data$extra_param, levels = unique(data$extra_param))
   data$h_label <- factor(data$h_label, levels = c("Null", "Alternative"))
   
   return(data)
 }
 
-c2st_methods <- c("debiased_test", "CP_test" , "CVCLF_test", "CLF_test", "CVLinearMMD_test", "LinearMMD_test")
-cit_methods <- c("WGSC_test",  "GCM_test", "PCM_test", "RCoT_test", "RCIT_test")
+drt_methods <- c("debiased_test", "CP_test" , "CV_CLF_test", "CLF_test", "CV_BlockMMD_test", "BlockMMD_test", "CV_LinearMMD_test", "LinearMMD_test")
+cit_methods <- c("WGSC_test",  "GCM_test", "PCM_test", "RCIT_test")
 method_labels <- c(
   "CP_test" = "CP",
   "debiased_test" = "DCP",
-  "CVLinearMMD_test" = "$^\\dagger$MMD-\u2113",
+  "CV_LinearMMD_test" = "$^\\dagger$MMD-\u2113",
   "LinearMMD_test" = "MMD-\u2113",
-  "CVCLF_test" = "$^\\dagger$CLF",
+  "CV_BlockMMD_test" = "$^\\dagger$MMDb",
+  "BlockMMD_test" = "MMDb",
+  "CV_CLF_test" = "$^\\dagger$CLF",
   "CLF_test" = "CLF",
   "GCM_test" = "GCM",
   "PCM_test" = "PCM",
   "WGSC_test" = "WGSC",
-  "RCIT_test" = "RCIT",
-  "RCoT_test" = "RCoT"
+  "RCIT_test" = "RCIT"
 )
 
 # Function to filter and prepare data
 prepare_data <- function(data) {
-  data_c2st <- data %>%
-    filter(test_type == "C2ST" & extra_param == "LL" & test_name %in% c2st_methods)
+  data_drt <- data %>%
+    # filter(test_type == "DRT" & extra_param == "LL" & test_name %in% c2st_methods)
+    filter(test_type == "DRT" & test_name %in% drt_methods)
   data_cit <- data %>%
-    filter(test_type == "CIT" & extra_param == "TRUE" & test_name %in% cit_methods)
+    # filter(test_type == "CIT" & extra_param == "TRUE" & test_name %in% cit_methods)
+    filter(test_type == "CIT" & test_name %in% cit_methods)
   
-  data_filtered <- rbind(data_c2st, data_cit)
+  data_filtered <- rbind(data_drt, data_cit)
   data_filtered$Method <- data_filtered$test_name
-  data_filtered$Method <- factor(data_filtered$Method, levels = c(c2st_methods, cit_methods))
+  data_filtered$Method <- factor(data_filtered$Method, levels = c(drt_methods, cit_methods))
+  data_filtered$test_type <- factor(data_filtered$test_type, levels = c("DRT", "CIT"))
   
   return(data_filtered)
 }
@@ -64,16 +68,16 @@ generate_plot_combined <- function(data, scenario_name) {
                                                 paste0("Scenario ", scenario_name, "(B) | Null"),
                                                 paste0("Scenario ", scenario_name, "(B) | Alternative")))
   
-  data$Method <- factor(data$Method, levels = c(c2st_methods, cit_methods))
+  # data$Method <- factor(data$Method, levels = c(drt_methods, cit_methods))
   
-  ggplot(data, aes(x = factor(n), y = Method, fill = mean_result)) +
+  ggplot(data, aes(x = factor(n), y = Method, fill = rejection_rate)) +
     geom_tile(color = "white", size = 0.5) +
     scale_fill_gradientn(colors = c("lightyellow", "orange", "red"), 
                          values = scales::rescale(c(0, 0.5, 1)),
                          limits = c(0, 1),
                          name = "Rejection \n     rate") +
-    geom_text(aes(label = sprintf("%.3f", mean_result)), color = "black", size = 12.6, family = "serif") +  
-    facet_grid(test_type ~ Scenario_Hypothesis, scales = "free_y", space = "free") +
+    geom_text(aes(label = sprintf("%.3f", rejection_rate)), color = "black", size = 12.6, family = "serif") +  
+    facet_grid(test_type ~ Scenario_Hypothesis, scales = "free_y", space = "free_y") +
     labs(
       title = paste("Rejection Rate for Scenario", scenario_name),
       x = "Sample Size (n)", 
@@ -119,9 +123,9 @@ for (scenario_number in 1:3) {
   data_combined$Scenario <- factor(data_combined$Scenario, 
                                    levels = c(paste0("Scenario ", scenario_number, "(U)"), 
                                               paste0("Scenario ", scenario_number, "(B)")))
+  data_combined$Method <- factor(data_combined$test_name, levels = c(drt_methods, cit_methods))
   
   plot <- generate_plot_combined(data_combined, scenario_number)
-  
   save_plot_as_pdf <- function(plot, filename, aspect_ratio = 2.0, height = 20) {
     width <- height * aspect_ratio
     cairo_pdf(filename, width = width, height = height, family = "serif")

@@ -53,19 +53,22 @@ generate_y <- function(x, rho=10, is_null=TRUE) {
 
 # Test functions
 drt_test_functions <- list(
-  LinearMMD_test = LinearMMD_test,
-  CV_LinearMMD_test = CV_LinearMMD_test,
-  CLF_test = CLF_test,
-  CV_CLF_test = CV_CLF_test,
-  CP_test = CP_test,
-  debiased_test = debiased_test
+  # LinearMMD_test = LinearMMD_test,
+  # CV_LinearMMD_test = CV_LinearMMD_test,
+  # CLF_test = CLF_test,
+  # CV_CLF_test = CV_CLF_test,
+  # CP_test = CP_test,
+  # debiased_test = debiased_test,
+  # BlockMMD_test = BlockMMD_test,
+  # CV_BlockMMD_test = CV_BlockMMD_test,
+  # bootstrap_MMD_test = bootstrap_MMD_test
 )
 
 cit_test_functions <- list(
-  RCIT_test = RCIT_test,
-  PCM_test = PCM_test,
-  GCM_test = GCM_test,
-  WGSC_test = WGSC_test
+  # RCIT_test = RCIT_test,
+  PCM_test = PCM_test
+  # GCM_test = GCM_test,
+  # WGSC_test = WGSC_test
 )
 
 # Parameters

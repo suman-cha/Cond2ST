@@ -1,0 +1,17 @@
+test_type,test_name,n,h_label,rejection_rate
+DRT,BlockMMD_test,200,Null,0.026
+DRT,CV_BlockMMD_test,200,Null,0.056
+DRT,BlockMMD_test,200,Alternative,0.372
+DRT,CV_BlockMMD_test,200,Alternative,0.666
+DRT,BlockMMD_test,500,Null,0.054
+DRT,CV_BlockMMD_test,500,Null,0.03
+DRT,BlockMMD_test,500,Alternative,0.888
+DRT,CV_BlockMMD_test,500,Alternative,1
+DRT,BlockMMD_test,1000,Null,0.048
+DRT,CV_BlockMMD_test,1000,Null,0.046
+DRT,BlockMMD_test,1000,Alternative,1
+DRT,CV_BlockMMD_test,1000,Alternative,1
+DRT,BlockMMD_test,2000,Null,0.034
+DRT,CV_BlockMMD_test,2000,Null,0.048
+DRT,BlockMMD_test,2000,Alternative,1
+DRT,CV_BlockMMD_test,2000,Alternative,1

@@ -71,19 +71,22 @@ sample_data <- function(X, Y, n, is_null = TRUE, is_x1 = TRUE) {
 
 # Define test functions
 drt_test_functions <- list(
-  LinearMMD_test = LinearMMD_test,
-  CLF_test = CLF_test,
-  CP_test = CP_test,
-  CV_LinearMMD_test = CV_LinearMMD_test,
-  CV_CLF_test = CV_CLF_test,
-  debiased_test = debiased_test
+    LinearMMD_test      = LinearMMD_test,
+    CV_LinearMMD_test   = CV_LinearMMD_test,
+    CLF_test            = CLF_test,
+    CV_CLF_test         = CV_CLF_test,
+    CP_test             = CP_test,
+    debiased_test       = debiased_test,
+    BlockMMD_test       = BlockMMD_test,
+    CV_BlockMMD_test    = CV_BlockMMD_test,
+    bootstrap_MMD_test  = bootstrap_MMD_test
 )
 
 cit_test_functions <- list(
-  RCIT_test = RCIT_test,
-  GCM_test = GCM_test,
-  WGSC_test = WGSC_test,
-  PCM_test = PCM_test
+    RCIT_test = RCIT_test,
+    PCM_test  = PCM_test,
+    GCM_test  = GCM_test,
+    WGSC_test = WGSC_test
 )
 
 n_values <- c(200, 400, 800, 1200, 1600, 2000)
@@ -162,6 +165,6 @@ for (n in n_values) {
 results_dt <- rbindlist(results_list)
 
 # Save the results
-filename <- paste0("results/simulation_results_", tag, ".csv")
+filename <- paste0("results/MMDB_simulation_results_", tag, ".csv")
 fwrite(results_dt, filename, row.names = FALSE)
 cat("Results saved to", filename, "\n")

@@ -29,7 +29,7 @@ generate_data <- function(n, p, group) {
 generate_y <- function(x, is_null = TRUE, sigma = 2) {
   n <- nrow(x)
   epsilon <- rt(n, df = sigma)
-  f0 <- x %*% c(1, -1, -1, 1, rep(0, dim(x)[2] - 4))
+  f0 <- x %*% c(1, -1, 1, 1, rep(0, dim(x)[2] - 4))
   mean_shift <- if (is_null) 0 else .5
   y <- f0 + epsilon + mean_shift
   return(y)
@@ -42,7 +42,10 @@ drt_test_functions <- list(
   CLF_test = CLF_test,
   CV_CLF_test = CV_CLF_test,
   CP_test = CP_test,
-  debiased_test = debiased_test
+  debiased_test = debiased_test,
+  BlockMMD_test = BlockMMD_test, 
+  CV_BlockMMD_test = CV_BlockMMD_test,
+  bootstrap_MMD_test = bootstrap_MMD_test
 )
 
 cit_test_functions <- list(

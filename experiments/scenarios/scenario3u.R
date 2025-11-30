@@ -48,7 +48,10 @@ drt_test_functions <- list(
   CLF_test = CLF_test,
   CV_CLF_test = CV_CLF_test,
   CP_test = CP_test,
-  debiased_test = debiased_test
+  debiased_test = debiased_test,
+  BlockMMD_test = BlockMMD_test,
+  CV_BlockMMD_test = CV_BlockMMD_test,
+  bootstrap_MMD_test = bootstrap_MMD_test
 )
 
 cit_test_functions <- list(
