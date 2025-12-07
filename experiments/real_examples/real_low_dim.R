@@ -73,14 +73,17 @@ drt_test_functions <- list(
   CP_test = CP_test,
   CV_LinearMMD_test = CV_LinearMMD_test,
   CV_CLF_test = CV_CLF_test,
-  debiased_test = debiased_test
+  debiased_test = debiased_test,
+  BlockMMD_test = BlockMMD_test,
+  bootstrap_MMD_test = bootstrap_MMD_test
 )
 
 cit_test_functions <- list(
   RCIT_test = RCIT_test,
   GCM_test = GCM_test,
   WGSC_test = WGSC_test,
-  PCM_test = PCM_test
+  PCM_test = PCM_test,
+  KCI_test = KCI_test
 )
 
 n_values <- c(200, 400, 800, 1200, 1600, 2000)
