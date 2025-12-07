@@ -77,7 +77,11 @@ generate_oracle_cit_data <- function(n, p, prob_z1 = 0.5, delta = 0, seed = NULL
 
     # Generate Z first (binary group indicator)
     Z <- rbinom(n, 1, prob_z1) # Z=1 means group 1, Z=0 means group 2
+<<<<<<< Updated upstream
 
+=======
+    
+>>>>>>> Stashed changes
     # Generate (X, Y) | Z
     X <- matrix(0, n, p)
     Y <- numeric(n)
@@ -109,11 +113,19 @@ generate_oracle_cit_data <- function(n, p, prob_z1 = 0.5, delta = 0, seed = NULL
 #' @param n Sample size
 get_epsilon_value <- function(epsilon_type, n) {
     switch(epsilon_type,
+<<<<<<< Updated upstream
         "1/n" = 1 / n,
         "1/sqrt(log(n))" = 1 / sqrt(log(n)),
         "1/log(n)" = 1 / log(n),
         "1/sqrt(n)" = 1 / sqrt(n),
         1 / log(n) # default
+=======
+           "1/n" = 1 / n,
+           "1/sqrt(log(n))" = 1 / sqrt(log(n)),
+           "1/log(n)" = 1 / log(n),
+           "1/sqrt(n)" = 1 / sqrt(n),
+           1 / log(n) # default
+>>>>>>> Stashed changes
     )
 }
 
@@ -157,7 +169,11 @@ apply_cit_c2st <- function(X1, Y1, X2, Y2, cit_method, reg_method, binary_reg_me
     X_merged <- rbind(X1[idx1, , drop = FALSE], X2[idx2, , drop = FALSE])
     Y_merged <- c(Y1[idx1], Y2[idx2])
     Z_merged <- c(rep(1, tilde_n1), rep(0, tilde_n2)) # Z=1 for group 1
+<<<<<<< Updated upstream
 
+=======
+    
+>>>>>>> Stashed changes
     # Shuffle
     shuffle_idx <- sample(tilde_n)
     X_merged <- X_merged[shuffle_idx, , drop = FALSE]
@@ -198,7 +214,11 @@ apply_cit_c2st <- function(X1, Y1, X2, Y2, cit_method, reg_method, binary_reg_me
         },
         error = function(e) 1
     )
+<<<<<<< Updated upstream
 
+=======
+    
+>>>>>>> Stashed changes
     samples_discarded <- n - tilde_n
 
     return(list(
@@ -256,7 +276,11 @@ apply_cit_oracle <- function(X, Y, Z, cit_method, reg_method, binary_reg_method,
         },
         error = function(e) 1
     )
+<<<<<<< Updated upstream
 
+=======
+    
+>>>>>>> Stashed changes
     return(list(
         p_value = p_value,
         reject = as.integer(p_value < 0.05),
@@ -365,7 +389,7 @@ p <- 5
 delta_values <- c(0, 0.25, 0.5, 0.75) # 0 = null, >0 = alternatives
 epsilon_types <- c("1/n", "1/sqrt(log(n))", "1/log(n)", "1/sqrt(n)") # From paper appendix
 n_sims <- 500
-cit_methods <- c("GCM", "PCM", "RCIT")
+cit_methods <- c("GCM", "PCM", "RCIT", "WGSC")
 reg_methods <- c("linear", "ranger", "xgboost")
 
 results_list <- list()
@@ -391,7 +415,11 @@ for (n in n_values) {
                         "n =", n, "| delta =", delta, "(", hypothesis, ") | eps =", epsilon_type,
                         "| CIT:", cit_method, "| Reg:", reg_method_name, "\n"
                     )
+<<<<<<< Updated upstream
 
+=======
+                    
+>>>>>>> Stashed changes
                     sim_results <- pblapply(1:n_sims, function(sim) {
                         run_single_simulation(
                             n = n,
@@ -539,10 +567,17 @@ type1_plot_dt <- summary_cit_dt[delta == 0]
 
 p1 <- ggplot(type1_plot_dt, aes(x = factor(n))) +
     geom_bar(aes(y = c2st_reject_rate, fill = "C2ST (Alg 1)"),
+<<<<<<< Updated upstream
         stat = "identity", position = position_dodge(width = 0.8), alpha = 0.7, width = 0.35
     ) +
     geom_bar(aes(y = oracle_reject_rate, fill = "Oracle CIT"),
         stat = "identity", position = position_nudge(x = 0.35), alpha = 0.7, width = 0.35
+=======
+             stat = "identity", position = position_dodge(width = 0.8), alpha = 0.7, width = 0.35
+    ) +
+    geom_bar(aes(y = oracle_reject_rate, fill = "Oracle CIT"),
+             stat = "identity", position = position_nudge(x = 0.35), alpha = 0.7, width = 0.35
+>>>>>>> Stashed changes
     ) +
     geom_hline(yintercept = 0.05, linetype = "dashed", color = "red", linewidth = 0.8) +
     facet_grid(cit_method ~ epsilon_type) +
