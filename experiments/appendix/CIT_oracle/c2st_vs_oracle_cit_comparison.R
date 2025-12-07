@@ -1,6 +1,6 @@
 ################################################################################
 # C2ST (with Algorithm 1) vs Oracle CIT Comparison
-# 
+#
 # Purpose: Address reviewer comment on the power loss due to subsampling in
 #          Algorithm 1. Compare the performance of CIT methods in:
 #          1. C2ST setting: Two independent samples, apply Algorithm 1 (subsampling)
@@ -39,26 +39,26 @@ source("./experiments/all_tests.R")
 
 #' Generate data for C2ST setting (two independent samples)
 #' @param n1 Sample size for group 1
-#' @param n2 Sample size for group 2  
+#' @param n2 Sample size for group 2
 #' @param p Dimension of X
 #' @param delta Mean shift for alternative (0 for null)
 #' @param seed Random seed
 generate_c2st_data <- function(n1, n2, p, delta = 0, seed = NULL) {
     if (!is.null(seed)) set.seed(seed)
-    
+
     # Group 1: X ~ N(0, I), Y|X ~ N(X'beta, 1)
     mu1 <- rep(0, p)
     X1 <- mvrnorm(n1, mu = mu1, Sigma = diag(p))
     beta <- c(1, -1, rep(0, p - 2))
     Y1 <- as.numeric(X1 %*% beta) + rnorm(n1)
-    
+
     # Group 2: X ~ N(mu2, I), Y|X ~ N(delta + X'beta, 1)
     # Under H0: delta = 0 (same conditional distribution)
     # Under H1: delta != 0 (different conditional distribution)
     mu2 <- c(0.5, -0.5, rep(0, p - 2))
     X2 <- mvrnorm(n2, mu = mu2, Sigma = diag(p))
     Y2 <- delta + as.numeric(X2 %*% beta) + rnorm(n2)
-    
+
     return(list(X1 = X1, Y1 = Y1, X2 = X2, Y2 = Y2))
 }
 
@@ -70,33 +70,33 @@ generate_c2st_data <- function(n1, n2, p, delta = 0, seed = NULL) {
 #' @param seed Random seed
 generate_oracle_cit_data <- function(n, p, prob_z1 = 0.5, delta = 0, seed = NULL) {
     if (!is.null(seed)) set.seed(seed)
-    
+
     beta <- c(1, -1, rep(0, p - 2))
     mu1 <- rep(0, p)
     mu2 <- c(0.5, -0.5, rep(0, p - 2))
-    
+
     # Generate Z first (binary group indicator)
-    Z <- rbinom(n, 1, prob_z1)  # Z=1 means group 1, Z=0 means group 2
-    
+    Z <- rbinom(n, 1, prob_z1) # Z=1 means group 1, Z=0 means group 2
+
     # Generate (X, Y) | Z
     X <- matrix(0, n, p)
     Y <- numeric(n)
-    
+
     idx1 <- which(Z == 1)
     idx2 <- which(Z == 0)
-    
+
     # Group 1 (Z = 1)
     if (length(idx1) > 0) {
         X[idx1, ] <- mvrnorm(length(idx1), mu = mu1, Sigma = diag(p))
         Y[idx1] <- as.numeric(X[idx1, , drop = FALSE] %*% beta) + rnorm(length(idx1))
     }
-    
+
     # Group 2 (Z = 0)
     if (length(idx2) > 0) {
         X[idx2, ] <- mvrnorm(length(idx2), mu = mu2, Sigma = diag(p))
         Y[idx2] <- delta + as.numeric(X[idx2, , drop = FALSE] %*% beta) + rnorm(length(idx2))
     }
-    
+
     return(list(X = X, Y = Y, Z = Z, n1 = length(idx1), n2 = length(idx2)))
 }
 
@@ -113,7 +113,7 @@ get_epsilon_value <- function(epsilon_type, n) {
         "1/sqrt(log(n))" = 1 / sqrt(log(n)),
         "1/log(n)" = 1 / log(n),
         "1/sqrt(n)" = 1 / sqrt(n),
-        1 / log(n)  # default
+        1 / log(n) # default
     )
 }
 
@@ -128,17 +128,17 @@ get_epsilon_value <- function(epsilon_type, n) {
 apply_cit_c2st <- function(X1, Y1, X2, Y2, cit_method, reg_method, binary_reg_method,
                            epsilon = NULL, seed = NULL) {
     if (!is.null(seed)) set.seed(seed)
-    
+
     n1 <- length(Y1)
     n2 <- length(Y2)
     n <- n1 + n2
-    
+
     # Apply Algorithm 1 for subsampling
     alg1_res <- apply_alg1(X1, X2, Y1, Y2, seed = seed, epsilon = epsilon)
     tilde_n1 <- alg1_res$tilde_n1
     tilde_n2 <- alg1_res$tilde_n2
     tilde_n <- tilde_n1 + tilde_n2
-    
+
     # Check if subsampling is feasible
     if (tilde_n1 > n1 || tilde_n2 > n2) {
         return(list(
@@ -149,47 +149,58 @@ apply_cit_c2st <- function(X1, Y1, X2, Y2, cit_method, reg_method, binary_reg_me
             bad_event = TRUE
         ))
     }
-    
+
     # Subsample and merge data
     idx1 <- sample.int(n1, tilde_n1)
     idx2 <- sample.int(n2, tilde_n2)
-    
+
     X_merged <- rbind(X1[idx1, , drop = FALSE], X2[idx2, , drop = FALSE])
     Y_merged <- c(Y1[idx1], Y2[idx2])
-    Z_merged <- c(rep(1, tilde_n1), rep(0, tilde_n2))  # Z=1 for group 1
-    
+    Z_merged <- c(rep(1, tilde_n1), rep(0, tilde_n2)) # Z=1 for group 1
+
     # Shuffle
     shuffle_idx <- sample(tilde_n)
     X_merged <- X_merged[shuffle_idx, , drop = FALSE]
     Y_merged <- Y_merged[shuffle_idx]
     Z_merged <- Z_merged[shuffle_idx]
-    
+
     # Apply CIT test: Testing Y ⊥ Z | X
     # In the CIT framework: X_cit = Y (response), Y_cit = Z (binary), Z_cit = X (covariate)
-    p_value <- tryCatch({
-        if (cit_method == "GCM") {
-            gcm_test_binary(X = Y_merged, Y = Z_merged, Z = X_merged, 
-                           reg_method = reg_method, binary_reg_method = binary_reg_method,
-                           seed = seed)
-        } else if (cit_method == "PCM") {
-            pcm_test_binary(Y = Z_merged, X = Y_merged, Z = X_merged, 
-                           reg_method = reg_method, binary_reg_method = binary_reg_method,
-                           seed = seed)
-        } else if (cit_method == "RCIT") {
-            # RCIT doesn't use regression methods directly
-            RCIT::RCIT(x = Y_merged, y = Z_merged, z = X_merged, 
-                       approx = "lpd4", num_f = 100, num_f2 = 5, seed = seed)$p
-        } else if (cit_method == "WGSC") {
-            wgsc_binary(Y = Z_merged, X = Y_merged, Z = X_merged, 
-                       reg_method = reg_method, binary_reg_method = binary_reg_method,
-                       seed = seed)
-        } else {
-            stop("Unknown CIT method")
-        }
-    }, error = function(e) 1)
-    
+    p_value <- tryCatch(
+        {
+            if (cit_method == "GCM") {
+                gcm_test_binary(
+                    X = Y_merged, Y = Z_merged, Z = X_merged,
+                    reg_method = reg_method, binary_reg_method = binary_reg_method,
+                    seed = seed
+                )
+            } else if (cit_method == "PCM") {
+                pcm_test_binary(
+                    Y = Z_merged, X = Y_merged, Z = X_merged,
+                    reg_method = reg_method, binary_reg_method = binary_reg_method,
+                    seed = seed
+                )
+            } else if (cit_method == "RCIT") {
+                # RCIT doesn't use regression methods directly
+                RCIT::RCIT(
+                    x = Y_merged, y = Z_merged, z = X_merged,
+                    approx = "lpd4", num_f = 100, num_f2 = 5, seed = seed
+                )$p
+            } else if (cit_method == "WGSC") {
+                wgsc_binary(
+                    Y = Z_merged, X = Y_merged, Z = X_merged,
+                    reg_method = reg_method, binary_reg_method = binary_reg_method,
+                    seed = seed
+                )
+            } else {
+                stop("Unknown CIT method")
+            }
+        },
+        error = function(e) 1
+    )
+
     samples_discarded <- n - tilde_n
-    
+
     return(list(
         p_value = p_value,
         reject = as.integer(p_value < 0.05),
@@ -209,32 +220,43 @@ apply_cit_c2st <- function(X1, Y1, X2, Y2, cit_method, reg_method, binary_reg_me
 #' @param seed Random seed
 apply_cit_oracle <- function(X, Y, Z, cit_method, reg_method, binary_reg_method, seed = NULL) {
     if (!is.null(seed)) set.seed(seed)
-    
+
     n <- length(Y)
-    
+
     # Apply CIT test directly (no subsampling needed)
     # Testing Y ⊥ Z | X
-    p_value <- tryCatch({
-        if (cit_method == "GCM") {
-            gcm_test_binary(X = Y, Y = Z, Z = X, 
-                           reg_method = reg_method, binary_reg_method = binary_reg_method,
-                           seed = seed)
-        } else if (cit_method == "PCM") {
-            pcm_test_binary(Y = Z, X = Y, Z = X, 
-                           reg_method = reg_method, binary_reg_method = binary_reg_method,
-                           seed = seed)
-        } else if (cit_method == "RCIT") {
-            RCIT::RCIT(x = Y, y = Z, z = X, 
-                       approx = "lpd4", num_f = 100, num_f2 = 5, seed = seed)$p
-        } else if (cit_method == "WGSC") {
-            wgsc_binary(Y = Z, X = Y, Z = X, 
-                       reg_method = reg_method, binary_reg_method = binary_reg_method,
-                       seed = seed)
-        } else {
-            stop("Unknown CIT method")
-        }
-    }, error = function(e) 1)
-    
+    p_value <- tryCatch(
+        {
+            if (cit_method == "GCM") {
+                gcm_test_binary(
+                    X = Y, Y = Z, Z = X,
+                    reg_method = reg_method, binary_reg_method = binary_reg_method,
+                    seed = seed
+                )
+            } else if (cit_method == "PCM") {
+                pcm_test_binary(
+                    Y = Z, X = Y, Z = X,
+                    reg_method = reg_method, binary_reg_method = binary_reg_method,
+                    seed = seed
+                )
+            } else if (cit_method == "RCIT") {
+                RCIT::RCIT(
+                    x = Y, y = Z, z = X,
+                    approx = "lpd4", num_f = 100, num_f2 = 5, seed = seed
+                )$p
+            } else if (cit_method == "WGSC") {
+                wgsc_binary(
+                    Y = Z, X = Y, Z = X,
+                    reg_method = reg_method, binary_reg_method = binary_reg_method,
+                    seed = seed
+                )
+            } else {
+                stop("Unknown CIT method")
+            }
+        },
+        error = function(e) 1
+    )
+
     return(list(
         p_value = p_value,
         reject = as.integer(p_value < 0.05),
@@ -256,13 +278,13 @@ apply_cit_oracle <- function(X, Y, Z, cit_method, reg_method, binary_reg_method,
 #' @param seed Random seed
 run_single_simulation <- function(n, p, delta, epsilon_type, cit_method, reg_method_name, seed) {
     set.seed(seed)
-    
+
     n1 <- n / 2
     n2 <- n / 2
-    
+
     # Calculate epsilon value
     epsilon <- get_epsilon_value(epsilon_type, n)
-    
+
     # Select regression methods
     if (reg_method_name == "linear") {
         reg_method <- lm_reg_method
@@ -276,23 +298,23 @@ run_single_simulation <- function(n, p, delta, epsilon_type, cit_method, reg_met
     } else {
         stop("Unknown regression method")
     }
-    
+
     # Generate data for C2ST setting
     c2st_data <- generate_c2st_data(n1, n2, p, delta = delta, seed = seed)
-    
+
     # Generate data for Oracle CIT setting (same total sample size n)
     oracle_data <- generate_oracle_cit_data(n, p, prob_z1 = 0.5, delta = delta, seed = seed + 10000)
-    
+
     # Apply CIT in C2ST setting (with Algorithm 1)
     c2st_result <- apply_cit_c2st(
         c2st_data$X1, c2st_data$Y1, c2st_data$X2, c2st_data$Y2,
-        cit_method = cit_method, 
-        reg_method = reg_method, 
+        cit_method = cit_method,
+        reg_method = reg_method,
         binary_reg_method = binary_reg_method,
-        epsilon = epsilon, 
+        epsilon = epsilon,
         seed = seed
     )
-    
+
     # Apply CIT in Oracle setting (direct samples)
     oracle_result <- apply_cit_oracle(
         oracle_data$X, oracle_data$Y, oracle_data$Z,
@@ -301,7 +323,7 @@ run_single_simulation <- function(n, p, delta, epsilon_type, cit_method, reg_met
         binary_reg_method = binary_reg_method,
         seed = seed
     )
-    
+
     # Return results
     return(data.table(
         n = n,
@@ -340,16 +362,16 @@ cat("=" %+% paste(rep("=", 70), collapse = "") %+% "\n\n")
 # Simulation parameters
 n_values <- c(200, 500, 1000, 2000)
 p <- 5
-delta_values <- c(0, 0.25, 0.5, 0.75)  # 0 = null, >0 = alternatives
-epsilon_types <- c("1/n", "1/sqrt(log(n))", "1/log(n)", "1/sqrt(n)")  # From paper appendix
+delta_values <- c(0, 0.25, 0.5, 0.75) # 0 = null, >0 = alternatives
+epsilon_types <- c("1/n", "1/sqrt(log(n))", "1/log(n)", "1/sqrt(n)") # From paper appendix
 n_sims <- 500
 cit_methods <- c("GCM", "PCM", "RCIT")
 reg_methods <- c("linear", "ranger", "xgboost")
 
 results_list <- list()
 
-total_configs <- length(n_values) * length(delta_values) * length(epsilon_types) * 
-                 length(cit_methods) * length(reg_methods)
+total_configs <- length(n_values) * length(delta_values) * length(epsilon_types) *
+    length(cit_methods) * length(reg_methods)
 cat("Total configurations:", total_configs, "\n")
 cat("Simulations per config:", n_sims, "\n")
 cat("Total simulations:", total_configs * n_sims, "\n\n")
@@ -363,11 +385,13 @@ for (n in n_values) {
                     if (cit_method == "RCIT" && reg_method_name != "ranger") {
                         next
                     }
-                    
+
                     hypothesis <- ifelse(delta == 0, "H0", "H1")
-                    cat("n =", n, "| delta =", delta, "(", hypothesis, ") | eps =", epsilon_type, 
-                        "| CIT:", cit_method, "| Reg:", reg_method_name, "\n")
-                    
+                    cat(
+                        "n =", n, "| delta =", delta, "(", hypothesis, ") | eps =", epsilon_type,
+                        "| CIT:", cit_method, "| Reg:", reg_method_name, "\n"
+                    )
+
                     sim_results <- pblapply(1:n_sims, function(sim) {
                         run_single_simulation(
                             n = n,
@@ -379,7 +403,7 @@ for (n in n_values) {
                             seed = 2024 + sim
                         )
                     })
-                    
+
                     results_list[[length(results_list) + 1]] <- rbindlist(sim_results)
                 }
             }
@@ -413,8 +437,8 @@ summary_dt <- results_dt[, .(
     # Power difference (positive means Oracle is more powerful)
     power_diff = mean(oracle_reject, na.rm = TRUE) - mean(c2st_reject, na.rm = TRUE),
     # Relative efficiency
-    relative_efficiency = mean(c2st_reject, na.rm = TRUE) / 
-                          pmax(mean(oracle_reject, na.rm = TRUE), 0.001)
+    relative_efficiency = mean(c2st_reject, na.rm = TRUE) /
+        pmax(mean(oracle_reject, na.rm = TRUE), 0.001)
 ), by = .(n, delta, epsilon_type, cit_method, reg_method)]
 
 # Add hypothesis label
@@ -456,7 +480,7 @@ cat("\n" %+% paste(rep("-", 70), collapse = "") %+% "\n")
 cat("SAMPLE EFFICIENCY ANALYSIS\n")
 cat(paste(rep("-", 70), collapse = "") %+% "\n\n")
 
-efficiency_summary <- results_dt[!c2st_bad_event, .(
+efficiency_summary <- results_dt[c2st_bad_event == FALSE, .(
     mean_n = mean(n),
     mean_tilde_n = mean(c2st_tilde_n),
     mean_discarded = mean(c2st_discarded),
@@ -514,10 +538,12 @@ summary_cit_dt <- summary_dt[, .(
 type1_plot_dt <- summary_cit_dt[delta == 0]
 
 p1 <- ggplot(type1_plot_dt, aes(x = factor(n))) +
-    geom_bar(aes(y = c2st_reject_rate, fill = "C2ST (Alg 1)"), 
-             stat = "identity", position = position_dodge(width = 0.8), alpha = 0.7, width = 0.35) +
-    geom_bar(aes(y = oracle_reject_rate, fill = "Oracle CIT"), 
-             stat = "identity", position = position_nudge(x = 0.35), alpha = 0.7, width = 0.35) +
+    geom_bar(aes(y = c2st_reject_rate, fill = "C2ST (Alg 1)"),
+        stat = "identity", position = position_dodge(width = 0.8), alpha = 0.7, width = 0.35
+    ) +
+    geom_bar(aes(y = oracle_reject_rate, fill = "Oracle CIT"),
+        stat = "identity", position = position_nudge(x = 0.35), alpha = 0.7, width = 0.35
+    ) +
     geom_hline(yintercept = 0.05, linetype = "dashed", color = "red", linewidth = 0.8) +
     facet_grid(cit_method ~ epsilon_type) +
     labs(
@@ -528,8 +554,10 @@ p1 <- ggplot(type1_plot_dt, aes(x = factor(n))) +
         fill = "Setting"
     ) +
     theme_minimal(base_size = 10) +
-    theme(legend.position = "bottom",
-          axis.text.x = element_text(angle = 45, hjust = 1)) +
+    theme(
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = 45, hjust = 1)
+    ) +
     scale_fill_manual(values = c("C2ST (Alg 1)" = "#E69F00", "Oracle CIT" = "#56B4E9"))
 
 ggsave("figures/appendix/c2st_vs_oracle_type1.pdf", p1, width = 12, height = 10)
@@ -542,7 +570,7 @@ p2 <- ggplot(power_plot_dt, aes(x = factor(n), group = interaction(delta, cit_me
     geom_line(aes(y = oracle_reject_rate, color = factor(delta), linetype = "Oracle"), linewidth = 1) +
     geom_point(aes(y = c2st_reject_rate, color = factor(delta), shape = "C2ST"), size = 3) +
     geom_point(aes(y = oracle_reject_rate, color = factor(delta), shape = "Oracle"), size = 3) +
-    facet_wrap(~ cit_method, ncol = 2) +
+    facet_wrap(~cit_method, ncol = 2) +
     labs(
         title = "Power Comparison: C2ST vs Oracle CIT (ε = 1/log(n))",
         subtitle = "Averaged over regression methods",
@@ -573,8 +601,10 @@ p3 <- ggplot(power_loss_dt, aes(x = factor(n), y = power_diff, fill = factor(del
         fill = "Effect Size (δ)"
     ) +
     theme_minimal(base_size = 10) +
-    theme(legend.position = "bottom",
-          axis.text.x = element_text(angle = 45, hjust = 1)) +
+    theme(
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = 45, hjust = 1)
+    ) +
     scale_fill_brewer(palette = "Oranges")
 
 ggsave("figures/appendix/c2st_vs_oracle_power_loss.pdf", p3, width = 12, height = 10)
@@ -630,11 +660,13 @@ if (nrow(rel_eff_dt) > 0) {
             fill = "Effect Size (δ)"
         ) +
         theme_minimal(base_size = 10) +
-        theme(legend.position = "bottom",
-              axis.text.x = element_text(angle = 45, hjust = 1)) +
+        theme(
+            legend.position = "bottom",
+            axis.text.x = element_text(angle = 45, hjust = 1)
+        ) +
         scale_fill_brewer(palette = "Set1") +
         coord_cartesian(ylim = c(0, 1.5))
-    
+
     ggsave("figures/appendix/c2st_relative_efficiency.pdf", p6, width = 12, height = 10)
 }
 
@@ -656,7 +688,7 @@ if (nrow(reg_comparison_dt) > 0) {
         theme_minimal(base_size = 11) +
         theme(legend.position = "bottom") +
         scale_fill_brewer(palette = "Set2")
-    
+
     ggsave("figures/appendix/c2st_power_loss_by_reg_method.pdf", p7, width = 12, height = 8)
 }
 
@@ -675,13 +707,13 @@ cat("Theoretical Expected Samples Discarded: O(sqrt(n * log(1/epsilon)))\n\n")
 
 theoretical_loss <- data.table(expand.grid(n = n_values, epsilon_type = epsilon_types))
 theoretical_loss[, epsilon_value := sapply(1:.N, function(i) get_epsilon_value(epsilon_type[i], n[i]))]
-theoretical_loss[, theoretical_discarded := sqrt(n * log(1/epsilon_value))]
+theoretical_loss[, theoretical_discarded := sqrt(n * log(1 / epsilon_value))]
 
 cat("Theoretical Sample Loss by Epsilon Type:\n")
 print(dcast(theoretical_loss, n ~ epsilon_type, value.var = "theoretical_discarded"))
 
 cat("\n\nEmpirical Mean Samples Discarded:\n")
-empirical_loss <- results_dt[!c2st_bad_event, .(
+empirical_loss <- results_dt[c2st_bad_event == FALSE, .(
     empirical_discarded = mean(c2st_discarded)
 ), by = .(n, epsilon_type)]
 print(dcast(empirical_loss, n ~ epsilon_type, value.var = "empirical_discarded"))
@@ -730,8 +762,10 @@ cat("   - XGBoost: High capacity, may overfit in small samples\n\n")
 
 cat("5. SAMPLE EFFICIENCY:\n")
 cat("   - Algorithm 1 discards O(sqrt(n * log(1/epsilon))) samples on average\n")
-cat("   - For n = 1000, epsilon = 1/log(n): ~", 
-    round(sqrt(1000 * log(log(1000))), 1), " samples discarded on average\n")
+cat(
+    "   - For n = 1000, epsilon = 1/log(n): ~",
+    round(sqrt(1000 * log(log(1000))), 1), " samples discarded on average\n"
+)
 cat("   - The percentage discarded decreases as n increases\n\n")
 
 cat("6. PRACTICAL IMPLICATIONS:\n")
@@ -749,4 +783,3 @@ cat("All four CIT methods (GCM, PCM, RCIT, WGSC) can be effectively used with\n"
 cat("Algorithm 1, with the choice depending on computational budget and model\n")
 cat("assumptions. The approach remains practical for reasonably sized datasets.\n")
 cat(paste(rep("=", 70), collapse = "") %+% "\n")
-

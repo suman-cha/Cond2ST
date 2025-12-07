@@ -1,0 +1,1139 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage[x11names]{xcolor}
+\usepackage{lipsum}
+\usepackage{fullpage}
+\usepackage{mathrsfs}
+\usepackage{svg}
+\usepackage{xr}
+\usepackage{dsfont}
+\usepackage{amsthm,cite,url,graphicx,booktabs,lipsum,color,bm,caption,subcaption,soul}
+\usepackage{pifont,tikz,paralist,multirow,amssymb}
+\usepackage{xifthen}
+\usepackage{enumerate}
+\usepackage{titlesec}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[authoryear]{natbib}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{multirow}
+\hypersetup{
+	colorlinks=true,
+	linktoc=all,
+	linkcolor=blue,
+	urlcolor=blue,
+	citecolor=blue,
+	filecolor=blue,
+	linktocpage=true
+}
+\usepackage{cleveref}
+\usepackage{kotex}
+
+\newcounter{reviewer}
+\setcounter{reviewer}{0}
+\newcounter{point}[reviewer]
+\setcounter{point}{0}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{example}{Example}
+\newtheorem{assumption}{Assumption}
+
+\definecolor{DarkBlue}{rgb}{0,0,0.55}
+
+\newcommand{\mP}{\mathbb{P}}
+\newcommand{\mE}{\mathbb{E}}
+\newcommand{\mV}{\mathrm{Var}}
+\newcommand{\given}{\,|\,}
+\newcommand{\sgiven}{\!\,|\,\!}
+\newcommand{\I}{\mathbb{(I)}}
+\newcommand{\II}{\mathbb{(II)}}
+\newcommand{\III}{\mathbb{(III)}}
+\newcommand{\IV}{\mathbb{(IV)}}
+\newcommand{\independent}{\mbox{${}\perp\mkern-11mu\perp{}$}}
+\newcommand{\iid}{ \overset{\mathrm{i.i.d.}}{\sim}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  breaklines=true,
+  captionpos=b,
+  language=Python,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{teal},
+  showstringspaces=false
+}
+
+\renewcommand{\thereviewer}{\Alph{reviewer}}
+
+
+\renewcommand{\thepoint}{Comment\,\thereviewer.\arabic{point}}
+
+
+\newenvironment{point1}
+   {\refstepcounter{point} \bigskip \noindent {\textbf{Associate Editor Comment~}} ---\ }
+   {\par }
+
+
+\newenvironment{point}
+   {\refstepcounter{point} \bigskip \noindent {\textbf{\thepoint} } ---\ }
+   {\par }
+
+
+\newcommand{\shortpoint}[1]{\refstepcounter{point}   \bigskip \noindent 
+	{\textbf{Reviewer~Point~\thepoint} } ---~#1  }
+
+
+\newenvironment{reply}[1][label]
+   {\medskip \noindent \color{DarkBlue} \begin{sf}\textbf{Reply}:\  }
+   {\medskip \par \end{sf}}
+
+
+\newcommand{\shortreply}[2][]{\medskip \noindent \begin{sf}\textbf{Reply}:\  #2
+	\ifthenelse{\equal{#1}{}}{}{ \hfill \footnotesize (#1)}%
+	\medskip \end{sf}}
+
+
+\newcommand{\skipreviewer}{\stepcounter{reviewer}}
+\newcommand{\reviewersection}{\stepcounter{reviewer} \bigskip \hrule
+                  \section*{Reviewer \thereviewer}}
+
+
+% Title
+\title{Our response to resubmitting revision made to Manuscript BIOMTRKA-24-558}
+
+% Significant change (or reply)를 첫 장에 모아놓고 정리한 뒤 이어가는 것이 전략이 될 수 있음
+% notation을 바꿔서 misunderstanding의 여지를 줄인다 -> confusion을 줄일 수 있음
+% footnote로 언급하는 게 좋을 수도
+% 짧은 질문에 길게 답하는 게 성의있다고 생각할 수도 있지만 사소한 질문에 장황하게 답하면 핵심을 잘 짚지 못했다고 생각할 수 있음
+% 리뷰어가 잘못 이해한 부분을 잘 짚었다고 얘기하는 것은 오히려 좋지 않음. 단호할 땐 단호하게
+% 미래형으로 답변해서는 안됨.(뭘 하겠다.) 뭔가를 했다고 표현해야 함. 
+% reference 점검 필요. pp만 포함된 것도 있고, 이상한 것도 섞여있음. 
+% Hu and Lei 의 bound를 improve하거나
+% quadratic MMD를 develop하거나 block-wise MMD 등으로
+% 시뮬레이션을 많이 추가
+
+% density ratio를 안 상태에서 limiting distribution을 derive 
+% 몰랐을 때 limiting distribution derive
+% limiting 분포가 normal로 가지 않을텐데 이것을 bootstrap 같은 것을 활용해서 convergence를 보이는 방향으로 증명
+
+% supplementary material에 conditional permutation test를 사용할 수 있는지. 작은 section 하나 생성해서 논의해보기
+% 여기서 discussion한 부분이 독자에게 이해를 돕는다면 본문에 추가
+
+
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\vspace{-30pt}
+We would like to thank the editor and the reviewers for their constructive comments and valuable suggestions, which have improved the quality and clarity of our manuscript. In the resubmission, we have thoroughly revised the manuscript in accordance with the feedback received. For the reviewer's convenience, all substantial changes have been highlighted in \textcolor{blue}{blue}. Below, we provide detailed, point-by-point responses to each comment, outlining how we have addressed every concern and suggestion. 
+
+% 요약본말고, 전체 내용을 넣고 답변
+
+% In particular, we are grateful to the Associate Editor and reviewers for their careful reading and insightful feedback, which have guided us in significantly improving the manuscript. We especially appreciate their recognition of the following positive aspects:
+
+% \begin{itemize}
+% \item The article tackles a significant and timely problem in statistical methodology with clear relevance to modern applications. The proposed frameworks, particularly their connections to conditional independence testing, are not only conceptually interesting but also open the door to leveraging powerful techniques from that area. 
+% \item The authors justify their approaches with theoretical results and simulation studies.
+% \item In my opinion, the contributions of the manuscript are interesting. 
+% \item The manuscript provides several contributions to the problem of conditional two-sample testing. 
+% \item The first one allows to turn an arbitrary conditional independence test into a conditional two-sample test and a theorem is provided that essentially states that level guarantees for the conditional independence test carry over to the conditional two sample test. 
+% \item The second framework is based on density ratio estimation and allows to turn various techniques for marginal two-sample testing to conditional two-sample testing using importance weighting. 
+% \end{itemize}
+
+
+
+\section*{Associate Editor Comments}
+\begin{point1}
+There is confusion and inconsistency in the setup and interpretation of the hardness results (Theorem 1 and 2) across conditional independence and conditional two-sample testing frameworks. 
+\end{point1}
+
+\begin{reply}[reply:A1]
+We thank the Associate Editor for this comment. We have addressed this issue in the revised manuscript as follows:
+\begin{itemize}
+    \item Added a detailed analysis of user study results.
+    \item Improved the evaluation of counterfactual explanations for user preferences.
+\end{itemize}
+\end{reply}
+\begin{point1}
+The distinction between the two proposed testing settings is not always clearly maintained, leading to confusion (especially around Algorithm 1 and Theorem 2). The theoretical guarantees are sometimes unclear or possibly misstated.
+\end{point1}
+
+\begin{reply}
+    
+\end{reply}
+
+\begin{point1}
+Reviewers criticize key assumptions (particularly Assumptions 1(b) and 2(b)) as overly strong or unrealistic in practical scenarios. 
+\end{point1}
+
+\begin{reply}
+    
+\end{reply}
+
+
+\begin{point1}
+There is a lack of guidance on test selection in practice, and insufficient discussion of stability, estimation effects, and computational costs. Reviewers request clarification on whether the proposed methods can be extended or adapted to other modern testing settings (e.g., local conditional tests).
+\end{point1}
+
+\begin{reply}
+    
+\end{reply}
+
+\textcolor{red}{모든 comment에 답변하기}
+
+
+\reviewersection % Reviewer A
+\section*{Summary}
+The manuscript provides several contributions to the problem of conditional two-sample testing. Firstly, it provides a theorem stating that conditional two-sample testing is a statistically hard problem in the sense that every valid conditional two-sample test (in
+the sense of type I error control for all null distributions) does not have power greater than its size against any alternative. This is a similar result to the hardness of conditional independence testing \citep{shah2020hardness}. By framing the conditional two-sample testing problem as a conditional independence testing problem, the hardness result essentially follows from the hardness of conditional independence testing, but this comes with some technical subtleties. 
+
+Secondly, the manuscript provides two general frameworks to construct conditional two-sample tests. The first one allows to turn an arbitrary conditional independence test into a conditional two-sample test and a theorem is provided that essentially states that level guarantees for the conditional independence test carry over to the conditional two sample test. The second framework is based on density ratio estimation and allows to turn various techniques for marginal two-sample testing to conditional two-sample testing using importance weighting. The validity of this approach mainly hinges on the accuracy of the density ratio estimate and a classifier-based approach and an approach based on linear-time MMD are discussed in detail. 
+
+\section*{Comments}
+\begin{point}
+In my opinion, the contributions of the manuscript are interesting. Below, I provide some
+major comment regarding the presentation and various minor comments.
+\end{point}
+
+\begin{reply}
+ Thank you for your positive evaluation of our manuscript and for recognizing the significance of our contributions to conditional two-sample testing. We appreciate your constructive feedback, which has helped us improve the clarity and rigor of our work. Below, we provide a detailed response to your major and minor comments (addressed separately).
+\end{reply}
+
+\begin{point}
+I found the treatment of the relationship between conditional two-sample tests and conditional independence tests somewhat confusing and arbitrary at some places. For example, the actual hardness result for conditional two-sample testing (Theorem 1) is already set up and formulated in the framework of a conditional independence test (in particular it includes the random variable $Z$ taking values in $\{1,2\}$ ). Only in the subsequent remark, it is argued that the type I error in the setting of the theorem is equivalent to the type I error when considering the conditional two-sample test. Would it not be more straightforward to formulate Theorem 1 really as a hardness result for conditional two-sample testing?
+\end{point}
+
+\begin{reply}
+We thank the reviewer for this helpful comment and agree with the suggestion. While the proof still proceeds via the conditional independence framework, we have revised the main contents so that the theorem statements are now formulated directly in the conditional two-sample testing setting, and the connection between the two frameworks is made explicit, as can be seen in the main contents.
+\end{reply}
+
+
+\begin{point}
+Also Theorem 2 considers the setting of conditional independence tests (with the random
+variable Z) but at the same time makes a statement about the output of Algorithm 1. But Algorithm 1 is formulated in the setting of conditional two-sample testing (where there is no random variable $Z$ a priori but two different datasets), so there is a mismatch and Algorithm 1 not well-defined in the setting of Theorem 2. Would it not be better to formulate Theorem 2 in terms of conditional two-sample tests, i.e. a statement about the validity of Algorithm 1 for conditional two-sample testing?
+
+In my opinion, the distinction between the two settings should be made with more care.
+For me it helped to look at Theorem 2 and Algorithm 1 in the following way (I do not
+claim that this is the way it should be done, but I hope it brings across my point)
+
+\paragraph{Setting 1 (cond. two-sample test):} $n_1, n_2 \in \mathbb{N}$ fixed. Observe two mutually independent samples $\big\{\big(X_i^{(1)}, Y_i^{(1)}\big)\big\}_{i=1}^{n_1} \sim P_{X Y}^{(1)}$ and $\big\{\big(X_i^{(2)}, Y_i^{(2)}\big)\big\}_{i=1}^{n_2} \sim P_{X Y}^{(2)}$. Sample random $\tilde{n}_1$ and $\tilde{n}_2$ as in Algorithm 1. If $\tilde{n}_1>n_1$ or $\tilde{n}_2>n_2$, accept $H_0$ (output 0). Else, set $\mathcal{D}_{\tilde{n}}=\big\{\big(X_i^{(1)}, Y_i^{(1)}, 1\big)\big\}_{i=1}^{\tilde{n}_1} \cup\big\{\big(X_i^{(2)}, Y_i^{(2)}, 2\big)\big\}_{i=1}^{\tilde{n}_2}$ and run the conditional independence test $\phi$ (that has output either 0 or 1) using $\mathcal{D}_{\tilde{n}}$ at level $\alpha$.
+
+\paragraph{Setting 2 (cond. independence test):} Let $n=n_1+n_2$ and consider a random vector $(X, Y, Z) \in \mathbb{R}^{d_X+d_Y} \times\{1,2\}$, where $Z$ takes values 1 and 2 with probability $n_1 / n$ and $n_2 / n$, respectively. Let $\left\{\left(X_i, Y_i, Z_i\right)\right\}_{i=1}^n$ be i.i.d. copies of $(X, Y, Z)$ and let $N_1=\sum_{i=1}^n \mathds{1}\left(Z_i=1\right)$ and $N_2=\sum_{i=1}^n \mathds{1}\left(Z_i=2\right)$. Sample random $\tilde{n}_1$ and $\tilde{n}_2$ as in Algorithm 1. If $\tilde{n}_1>N_1$ or $\tilde{n}_2>N_2$, accept $H_0$. Else, let $I_1$ be the first $\tilde{n}_1$ indices $i$ with $Z_i=1$ and $I_2$ be the first $\tilde{n}_2$ indices $i$ with $Z_i=2$, set $\mathcal{D}_{\tilde{n}}=\left\{\left(X_i, Y_i, Z_i\right)\right\}_{i \in I_1 \cup I_2}$ and run the conditional independence test $\phi$ using $\mathcal{D}_{\tilde{n}}$ at level $\alpha$. \\
+
+Denote the output of setting 1 as $\phi_1$ and the output of setting 2 as $\phi_2$. Then, the distribution of $\phi_1$ is equal to the distribution of $\phi_2 \mid N_1=n_1, N_2=n_2$. Note that setting 1 is the same setting as the problem setup in Section 1.1. and Algorithm 1. Setting 2 is the setup of Theorem 2 and what is meant with "the output of Algorithm 1" in Theorem 2. Maybe I am missing something, but I think that with the distinction into setting 1 and setting 2, one could formulate Theorem 2 and Algorithm 1 both in terms of setting 1 and then use the equality of the distributions of $\phi_1$ and $\phi_2 \mid N_1=n_1, N_2=n_2$ for the proof.
+\end{point}
+
+% \begin{reply}\label{reply:A2}
+% We appreciate the reviewer's insightful comment regarding the need for a more careful distinction between the conditional two-sample setting (with fixed sample sizes) and the conditional independence testing setting (with i.i.d. samples). In response, we have revised the manuscript to address this point. The main results are now stated directly in the conditional two-sample testing framework. Furthermore, a remark has been added to clarify the proof strategy. This remark explains how the hardness result for conditional two-sample testing is established by leveraging the known hardness result of conditional independence testing. It explicitly addresses the connection that our setting involves fixed samples sizes, whereas existing results for conditional independence testing assume i.i.d. sampling. This clarification makes the logical flow of the argument more transparent. 
+% \end{reply}
+\begin{reply}\label{reply:A2}
+We appreciate the reviewer’s insightful comment regarding the distinction between the conditional two-sample setting (with fixed sample sizes) and the conditional independence testing setting (with i.i.d. samples). In response, we have revised the manuscript accordingly. First, we clarify that the output of Algorithm 1 is the conditional independence test $\phi$ applied to the reduced dataset $\mathcal{D}_{\tilde{n}}$ at level $\alpha$, denoted $\phi_{\tilde{n}}$. Second, Theorem 2 is now stated directly in the conditional two-sample testing framework, consistent with Algorithm 1. We have revised Theorem 2 to be stated directly in the conditional two-sample framework, consistent with Algorithm 1. The statement now explicitly incorporates the distributional connection that $\phi_{1}$ coincides in distribution with $\phi_{2} \mid N_{1}=n_{1}, N_{2}=n_{2}$, thereby addressing the fact that our setting involves fixed sample sizes, whereas existing results for conditional independence assume i.i.d. sampling. These revisions ensure that Theorem 2 and Algorithm 1 are fully consistent in the conditional two-sample framework, while making clear how the result relates to prior work on conditional independence testing.
+\end{reply}
+
+\begin{point}
+The discussion of why one cannot in general apply a conditional independence test to the full data, but needs to reduce the sample size to $\tilde{n}$ (discussion between lines 266 and 285), seems important to me. Perhaps I am missing something, but the presented coupling argument is a bit unclear to me as it compares two datasets of the same size. How exactly is this connected to the question of why one cannot apply the conditional independence test to the full dataset? Why can't one simply argue that since the number of discarded samples is $O\left((n \log (1 / \epsilon))^{1 / 2}\right)$, if the test is not changed too much by $O\left(n^{1 / 2}\right)$ additional samples, it should be fine to use the full data? Also, Example 2 (unstable case) seems quite artificial. Is it possible to give another example or a better intuition? For example, from Section 3.5. in the Supplementary Material, one can see that RCIT (in contrast to GCM and PCM) is very sensitive to this issue. Is there an intuition why this is the case?
+\end{point}
+
+\begin{reply}
+    The necessity of subsampling in Algorithm 1 arises from a fundamental structural mismatch between conditional two-sample testing (C2ST) and conditioanl independence testing (CIT). In C2ST, the sample sizes $n_1$ and $n_2$ for groups $Z = 1$ and $Z = 2$ are fixed, making $Z$ a deterministic label. This violates the core assumption of CIT methods, which require $(X, Y, Z)$ to be i.i.d. draws from a joint distribution. Directly applying CITs to the full dataset cannot guarantee statistical properties such as type I error control.
+    
+    The coupling argument is introduced to make this distinction precise. By considering an auxiliary i.i.d. dataset $\{(\tilde{X}_i,\tilde{Y}_i,\tilde{Z}_i)\}_{i=1}^n$ which plays the role of i.i.d. samples from the joint distribution $P_{XYZ}$, we obtain a version of the data consistent with the CIT framework. Comparing this coupled dataset with the original one highlights the distributional gap: the original has fixed group sizes, whereas the coupled version has randomized group sizes. Since CIT statistics are defined under i.i.d.sampling, directly applying them to data with fixed group sizes is not logically justified. The coupling instead provides a way to assess whether this difference is negligible from the perspective of the test statistic. Definition 1 formalizes this notion, and Examples 1 and 2 illustrate cases where the condition is satisfied or violated.
+
+    Subsampling mitigates this issue by constructing a dataset $\mathcal{D}_{\tilde{n}}$ where $Z$ is randomized. By drawing $\tilde{n}_1 \sim \text{Binomial}(\tilde{n}, n_1/n)$ and setting $\tilde{n}_2 = \tilde{n} - \tilde{n}_1$, we restore the i.i.d. structure required for CIT validity. The binomial concentration ensures $\tilde{n}_1 \leq n_1$ and $\tilde{n}_2 \leq n_2$ with probability $1-2\varepsilon$, where $\varepsilon = o(1)$. This guarantees that $\mathcal{D}_{\tilde{n}}$ behaves as an i.i.d. sample from the joint distribution $P_{XYZ}$ with $P(Z=1) =n_1/n$, preserving CIT guarantees asymptotically. 
+
+    If a test statistic is sufficiently stable, meaning its distribution is invariant to $O(n^{1/2})$ data perturbations, then the effect of discarding these samples is negligible, and one could use the full data. This can be applied for certain statistics, such as GCM and PCM, which remain well-behaved even with fixed $Z$. However, this stability is not universal: for example, permutation-based CITs like RCIT rely critically on $Z$ being random and exchangeable. Supplementary Section 3.5 shows that RCIT exhibits inflated type I error when applied to the full, fixed-label data, but regains nominal error control after applying Algorithm 1. This demonstrates that i.i.d. structure is essential for general validity. 
+\end{reply}
+\textcolor{red}{전반적으로 잘 작성되었으나 기존 내용을 풀어서 쓴 느낌입니다. 리뷰어의 질문에 새로운 intuition와 질문에 직접적인 답안은 아닌 것 같아 수정이 필요합니다. Stable하다면 Algorithm 1 적용 필요없이 full data를 쓰면 되지 않나?}
+
+\begin{point}
+Section 1.4., line 191, undefined reference.
+\end{point}
+
+\begin{reply}
+We have corrected the citation error in Section~1.4, line~191, by properly inserting the missing reference.
+\end{reply}
+
+
+\begin{point}
+In Algorithm 1 , shouldn't $\tilde{n}=k^* n$ be rounded to a whole number?
+\end{point}
+
+\begin{reply}
+The expression $\tilde{n} = k^* n$ was a typo. In our implementation, we consistently used the floored version $\tilde{n} = \lfloor k^* n \rfloor$ to ensure integer subsample sizes in all experiments. We have updated Algorithm 1 accordingly.
+\end{reply}
+
+\begin{point}
+Line 272 , I don't really understand what is meant with ``meaning the conditional testing errors of $\phi$ are asymptotically equivalent to its marginal errors".
+\end{point}
+
+\begin{reply}
+Thank you for raising this point. As discussed above, $\phi$ is a conditional independence test and thus requires i.i.d.samples from $P_{XYZ}$, while the conditional two-sample setting fixes the group sizes $N_1=n_1$ and $N_2=n_2$. Definition 1 formalizes when this difference is asymptotically negligible: if the test statistic $T$ is stable, then using the original dataset with fixed group sizes or an i.i.d.~dataset of the same total size leads to asymptotically identical behavior of $T$. In this sense, the conditional errors are the error rates evaluated given fixed group sizes $(N_1=n_1, N_2=n_2)$, whereas the marginal errors correspond to the error rates in the i.i.d.~sampling setting $(X,Y,Z)\sim P_{XYZ}$. Under stability, these two notions coincide asymptotically. In other words, stability ensures that all $n$ samples can be used without subsampling, since both data-generating views yield the same asymptotic distribution for the test statistic.
+\end{reply}
+\textcolor{red}{어디에 어떻게 반영했다 설명 (e.g., On page ..., we revised the sentence A to B..)}
+
+\begin{point}
+Line 302, shouldn't it be $\sum_{i=1}^n 1\left(Z_i=1\right)=n_1$ instead of $\sum_{i=1}^n Z_i=n_1$ etc. in the definition of $\hat{f}$ and $\hat{g}$ ? ( $Z_i$ takes values in $\{1,2\}$ and not in $\{0,1\}$ )
+\end{point}
+
+\begin{reply}[reply:A7]
+Since $Z_i \in \{1,2\}$, the expression $\sum_{i=1}^n Z_i = n_1$ was incorrectly used to represent the count of group 1 samples. We have revised the definitions to properly use indicator functions: $\hat{f}(X_i) := Y_i \mathds{1}\left(\sum_{i=1}^n \mathds{1}\{Z_i=1\} = n_1\right) + f(X_i) \mathds{1}\left(\sum_{i=1}^n \mathds{1}\{Z_i=1\} \neq n_1\right)$ and similarly for $\hat{g}$. This ensures the indicator condition correctly counts the number of samples in group 1. We have updated all related expressions in the manuscript accordingly.
+\end{reply}
+
+
+\begin{point}
+The expression on line 345 is always $\geq 0$. How can it have expectation zero under the null hypothesis?
+\end{point}
+
+\begin{reply}[reply:A8]
+% You’re right, and we agree that the statistic in line 345 is always non-negative. In fact, the previous text should have said that, by symmetry, the statistic’s expectation under the null is $1/2$ this matches the example from \cite{hu2024two} (without normalization). We’ve corrected the manuscript to reflect this.
+Thank you for pointing out this issue. The statistic in line 345 is indeed always non-negative. The text should have stated that, under the null hypothesis, the expected value of the statistic is $1/2$, consistent with the example in \cite{hu2024two} (without normalization). We have corrected this statement in the revised manuscript. 
+\end{reply}
+
+
+\begin{point}
+In equation (4), shouldn't 1 and 2 be swapped, since the true label for $V_i^{(1)}$ is 1 and the the true label for $V_i^{(2)}$ is $2 ?$
+\end{point}
+
+\begin{reply}[reply:A9]
+% You’re right. The true label for$V_i^{(1)}$ should be 1, and that for $V_i^{(2)}$ should be 2. The current expression in Equation (4) mistakenly swaps them. We will revise it as:
+% \begin{align*}
+% \widehat{h} = \argmin_{h \in \mathcal{H}} \biggl\{ \frac{1}{n_1} \sum_{i=1}^{n_1} \ell\bigl(h\bigl(V_i^{(1)}\bigr), 1\bigr) + \frac{1}{n_2} \sum_{i=1}^{n_2} r_X\bigl(X_i^{(2)}\bigr) \ell\bigl(h\bigl(V_i^{(2)}\bigr), 2\bigr) \biggr\}.
+% \end{align*} We’ve corrected this in the manuscript.
+The true label for $V_i^{(1)}$ is $1$, and for $V_i^{(2)}$ is $2$. The previous version of Equation (4) incorrectly swapped these labels. We have revised Equation (4) as follows to reflect the correct assignment:
+\begin{align*}
+\widehat{h} = \argmin_{h \in \mathcal{H}} \biggl\{ \frac{1}{n_1} \sum_{i=1}^{n_1} \ell\bigl(h\bigl(V_i^{(1)}\bigr), 1\bigr) + \frac{1}{n_2} \sum_{i=1}^{n_2} r_X\bigl(X_i^{(2)}\bigr) \ell\bigl(h\bigl(V_i^{(2)}\bigr), 2\bigr) \biggr\}.
+\end{align*}
+This correction has been made in the revised manuscript.
+
+\end{reply}
+
+
+\begin{point}
+I was first confused by the sampling mechanism in Section 5.2. Do I understand correctly that under the null hypothesis, the conditional distribution of $Y^{(1)}$ and $Y^{(2)}$ given $X^{(1)}$ and $X^{(2)}$, respectively is just the marginal distribution of $Y$ ? And for the alternative hypothesis, there is introduced some artificial dependence of the conditional distribution of $Y^{(2)}$ given $X^{(2)}$ ? If this is correct, it would perhaps be helpful to the reader to explicitly state that the dependence between $X$ and $Y$ in the original dataset is completely destroyed and some artificial dependence is introduced.
+\end{point}
+
+\begin{reply}[reply:A10]
+% We thank the reviewer for this perceptive question. Your interpretation is largely correct, and we have clarified the description of the sampling mechanism in Section 5.2 to make the distinction between the null and alternative more explicit. 
+
+% Under the null hypothesis, our goal is to ensure that the conditional distributions $P_{Y^{(1)}|X^{(1)}}$ and $P_{Y^{(2)}|X^{(2)}}$ are identical. To achieve this, we completely break the original dependence between $X$ and $Y$ present in the dataset. Specifically, $X^{(1)}$ and $X^{(2)}$ are subsampled independently from the covariates in the original data using different schemes (uniform sampling for $X^{(1)}$ and a biased sampling for $X^{(2)}$), and then $Y^{(1)}$ and $Y^{(2)}$ are drawn independently from the empirical marginal distribution of $Y$ (restricted to the covariates in $X^{(1)}$ and $X^{(2)}$, respectively). This ensures that both $Y^{(1)}$ and $Y^{(2)}$ are conditionally independent of their respective covariates, and identically distributed. Hence, the null hypothesis $P_{Y^{(1)}|X^{(1)}} = P_{Y^{(2)}|X^{(2)}}$ holds trivially.
+
+% Under the alternative, we introduce a structured violation of the null by making the conditional distribution $P_{Y^{(2)}|X^{(2)}}$ depend on $X^{(2)}$ in a way that is not shared by $P_{Y^{(1)}|X^{(1)}}$. In practice, this is implemented by applying a nonuniform sampling scheme on $Y$ (e.g., using weights like $\exp(-Y)$) that induces a dependence between $Y^{(2)}$ and $X^{(2)}$ due to the shared biasing mechanism during sampling. Thus, $P_{Y^{(2)}|X^{(2)}} \neq P_{Y^{(1)}|X^{(1)}}$ under the alternative.
+
+% We have revised Section 5.2 to explicitly state that the original dependence between $X$ and $Y$ in the dataset is deliberately destroyed under the null, and an artificial dependence is introduced under the alternative. This clarification helps distinguish the designed mechanism from typical observational settings and aligns the simulation strategy with the theoretical framework of conditional two-sample testing.
+
+% We appreciate the reviewer’s comment, which helped us significantly improve the exposition of this critical section.
+
+The reviewer's understanding of the sampling mechanism aligns with our construction. In the real data experiments, we treat each dataset as \textbf{a finite population} as in \citet{kim2023conditional}, induce a covariate shift in $X$, and then construct $Y$ in a way that
+
+\textit{(i) eliminates $X$-$Y$ relationship under $H_0$} and 
+
+\textit{(ii) creates a discrepancy in the conditional law $P(Y \given X, Z)$ across the two samples under $H_1$}.
+
+\vspace{1em}
+
+\noindent Concretely, we draw $X^{(1)}$ uniformly from the feature space, while $X^{(2)}$ is sampled with probability proportional to $\exp(-x_1^{2})$ (where $x_1$ is the first feature), thereby inducing covairate shift. 
+
+\vspace{0.5em}
+
+\noindent Second, Conditional on $X^{(j)}$, we resample $Y^{(j)}$ \textbf{independently} of $X^{(j)}$ by uniform sampling; thereby 
+\begin{equation*}
+    P(Y^{(1)} \given X^{(1)}) = P(Y^{(2)} \given X^{(2)}).
+\end{equation*}
+
+\vspace{0.2em}
+
+\noindent Lastly, to construct alternative hypothesis, we keep $Y^{(1)}$ uniform as above, but draw $Y^{(2)}$ with weights proportional to $\exp(-y)$. This changes the conditional law across groups; thereby 
+\begin{equation*}
+    P(Y^{(1)} \given X^{(1)}) \neq P(Y^{(2)} \given X^{(2)}).
+\end{equation*}
+
+\vspace{0.5em}
+\noindent To prevent confusion, we have revised Section 5.2 to state that original $X$-$Y$ dependence is removed to construct null and alternative hypotheses.
+\end{reply}
+\textcolor{red}{샘플링 매커니즘을 기존보다 더 자세하게 설명했다고 전달? 여기서 리뷰어가 샘플링 매커니즘을 잘 이해 못했다고 컴플레인 $\to$ 리뷰어에게 설명하는 것도 중요하지만 앞으로의 additional confusion을 예방하기 위해 본문에도 추가 설명 필요}
+
+\reviewersection % Reviewer B
+\textcolor{red}{여긴 summary no?}
+\begin{point}
+The hardness result is unsurprising, as it has already been discussed in Remark 4 of \cite{shah2020hardness}. Nevertheless, Theorem 1 and its proof require refinement. In the proof, instead of considering $n$ i.i.d. samples $\left\{\left(X_i, Y_i, Z_i\right)\right\}_{i=1}^n \stackrel{\text { i.i.d. }}{\sim} P$, the authors actually work with $N$ i.i.d. samples $\left\{\left(X_i, Y_i, Z_i\right)\right\}_{i=1}^N \stackrel{\text { i.i.d. }}{\sim} P$. Then, under the event $\big\{N_1^{\prime}=\sum_{i=1}^N \mathds{1}\big(Z_i=1\big) \geq n_1, N_2^{\prime}=\sum_{i=1}^N \mathds{1}\big(Z_i=2\big) \geq n_2\big\}$, the authors use only $n_1$ observations with $Z=1$ and $n_2$ observations with $Z=2$ out of the $N$ samples. Therefore, the resulting $n=n_1+n_2$ data points are not i.i.d. from $P$, contrary to what is stated in Theorem 1. Moreover, the interpretation of the conditioning event $\left\{N_1=\sum_{i=1}^n \mathds{1}\left(Z_i=1\right)=n_1, N_2=\sum_{i=1}^n \mathds{1}\left(Z_i=2\right)=n_2\right\}$ in Theorem 1 is unclear, since the test $\phi$ is based on $n=n_1+n_2$ data points out of $N$ samples rather than $n$ i.i.d. samples. In a nutshell, the test $\phi$ in the proof is a conditional independence test based on $\left\{\left(X_i, Y_i, Z_i\right)\right\}_{i=1}^N \stackrel{\text { i.i.d. }}{\sim} P$, which is not the same as that in Theorem 1.
+\end{point}
+
+\begin{reply}\label{reply:B1}
+    We agree that the clarity of the hardness result in Theorem 1 and its proof requires refinement. Theorem 1 and its proof has been revised to be more rigorous and clear. The logic of the proof is as follows. The argument begins by considering an arbitrary level~$\alpha$ test the conditional two-sample problem, denoted $\phi$, which operates on two independent samples of fixed sizes $n_1$ and $n_2$. This is the setting stated in Theorem 1. To leverage the known negative result for conditional independence testing, we use $\phi$ as a building block to construct an auxiliary test, $\phi'$ for the conditional independence problem. $\phi'$ is designed to operate on a larger sample of $N$ i.i.d. data points from a joint distribution $P_{XYZ}$ where $N > n_1+n_2$. We then bound the power of $\phi$ in terms of $\phi'$ which is already known to be bounded by $\alpha$.   
+\end{reply}
+\textcolor{red}{설명에 improve가 필요하지만 내용은 correct하는 것을 강조? Reviewer에게 너무 지고 갈 필요는 X}
+
+
+\begin{point}Additionally, the proof crucially relies on Theorem 2 and Remark 4 of \cite{shah2020hardness}, where no assumption is made about the marginal distribution of $Z \in\{1,2\}$, i.e., $P(Z=1)$. However, the authors assume $P(Z=1)=n_1 / n$ for $n_1, n_2$ as given in Theorem 1, thereby imposing a restriction on the null distributions $\mathcal{P}_{0, M}$. This raises the question of whether the hardness result in \cite{shah2020hardness} remains valid for conditional independence testing when the marginal distribution of $Z \in\{1,2\}$ is specified. While the answer appears to be affirmative, at least when $X$ is continuous, a discussion on the implications of this restriction would be valuable.
+\end{point}
+
+\begin{reply}
+We appreciate the reviewer’s insightful comment regarding the assumption on the marginal distribution of $Z \in \{1,2\}$ in our framework. As the reviewer noted, the original hardness result of \citet{shah2020hardness} does not impose any constraint on $P(Z=1)$, whereas in our earlier formulation of Theorem~1 we assumed $P(Z = 1) = n_1/n$. This naturally raises the question of whether the impossibility result continues to hold when the marginal distribution of $Z$ is fixed.
+
+The answer is affirmative. The hardness persists even under this restriction, and the constraint is not merely a technical detail. The central difficulty of conditional independence testing arises from the continuity of the conditioning variable, rather than from the flexibility of the marginal distribution of the conditioned variable. In our setting, $X$ is continuous and serves as the conditioning variable. Therefore, even when the marginal distribution of $Z$ is specified, the null and alternative hypotheses remain statistically indistinguishable, and the impossibility result continues to apply.
+
+We note that Theorem~1 has since been revised so that the assumption on $P(Z=1)$ no longer appears in the statement. Nonetheless, the above reasoning is incorporated in the proof, where the impossibility result is established under fixed marginal distributions of $Z$ as well.
+
+To justify this formally, we build upon a central technical lemma from \citet{neykov2021minimax}, which plays a key role in establishing the statistical indistinguishability between the null and alternative. We first recall their result below:
+\begin{lemma}(\citealp[][Lemma A.1]{neykov2021minimax})
+Suppose $(X, Y, Z) \in \mathbb{R}^3$ have a distribution supported either on $[-M, M]^3$ for some $M \in(0, \infty)$, or on $(-\infty, \infty)^3$. Let $\big(X_i, Y_i, Z_i\big)_{i \in[n]}$ be $n$ i.i.d. copies of $(X, Y, Z)$. Given $\delta>0$ there exists $C:=C(\delta)$ such that for all $\varepsilon>0$ and all Borel sets $D \subseteq \mathbb{R}^{3 n} \times[0,1]$, it's possible to construct an i.i.d. sequence $\big(\widetilde{X}_i, \widetilde{Y}_i, \widetilde{Z}_i\big)_{i \in[n]}$ such that $\widetilde{X}_i \independent \widetilde{Y}_i \mid \widetilde{Z}_i$ for all $i$ and
+\begin{enumerate}
+    \item[i.] $\mathbb{P}\Big(\max _{i \in[n]}\big\|\big(\widetilde{X}_i, \widetilde{Y}_i, \widetilde{Z}_i\big)-\big(X_i, Y_i, Z_i\big)\big\|_{\infty}<\varepsilon\Big)>1-\delta$,
+
+    \item[ii.] If $U$ is uniform on $[0,1]$ independently of $\big(\widetilde{X}_i, \widetilde{Y}_i, \widetilde{Z}_i\big)_{i \in[n]}$ then    
+\begin{align*}
+    \mathbb{P}\Big(\big(\big(\widetilde{X}_i, \widetilde{Y}_i, \widetilde{Z}_i\big)_{i \in[n]}, U\big) \in D\Big) \leq C \mu(D),
+\end{align*}
+where $\mu$ is the Lebesgue measure.
+\end{enumerate}
+\end{lemma}
+While this lemma allows full flexibility in the marginal distributions of $(X, Y, Z)$, our setting requires that the marginal of $Z \in \{1, 2\}$ be fixed (e.g., $\mathbb{P}(Z=1) = \lambda_n$). The following lemma extends Lemma A.1 to this setting with a discrete, fixed marginal for $Z$, while preserving the key conditional independence structure $Z \perp Y \mid X$ and ensuring the modified data remains close to the original sample. This establishes that the hardness result remains valid even under such marginal constraints.
+We now formalize this extension in the lemma below:
+\begin{lemma}\label{lemma}
+ Suppose $(Z, Y, X) \in \{1,2\} \times \mathbb{R}^{d_{Y}+d_{X}}$ has a distribution supported either on $\{1,2\} \times [-M, M]^{d_{Y}+d_{X}}$ for some $M \in (0, \infty)$, or on $\{1,2\} \times (-\infty, \infty)^{d_{Y}+d_{X}}$. Let $\{ (Z_i, Y_i, X_i) \}_{i \in [n]}$ be i.i.d. copies of $(Z, Y, X)$, with $\mathbb{P}(Z = 1) = \lambda_n \in (0,1)$ and $\mathbb{P}(Z = 2) = 1 - \lambda_n$. Then, for any $\delta > 0$, there exists a constant $C := C(\delta) > 0$ such that for any $\varepsilon > 0$ and any Borel set
+ \begin{align*}
+D \subseteq (\{1,2\} \times \mathbb{R}^{d_{Y}+d_{X}})^n \times [0,1],
+ \end{align*}
+it is possible to construct an i.i.d. sequence $\{ (\widetilde{Z}_i, \widetilde{Y}_i, \widetilde{X}_i) \}_{i \in [n]}$ satisfying $\widetilde{Z}_i \perp \widetilde{Y}_i \mid \widetilde{X}_i$ for all $i \in [n]$ and the following two properties.
+\begin{enumerate}
+    \item[(i)] First, with probability at least $1-\delta$, the modified sequence is close to the original sample in the sense that 
+\begin{align*}
+\mathbb{P} \Big( \max_{i \in [n]} \big\| (\widetilde{Y}_i, \widetilde{X}_i) - (Y_i, X_i) \big\|{\infty} < \varepsilon, \ \widetilde{Z}_i = Z_i \text{ for all } i \Big) > 1 - \delta.
+\end{align*}
+\item[(ii)] Second, if $U \sim \operatorname{Unif}[0,1]$ is independent of $\{ (\widetilde{Z}_i, \widetilde{Y}_i, \widetilde{X}_i) \}_{i \in [n]}$, then the joint probability satisfies the inequality
+\begin{align*}
+\mathbb{P} \Big( \big( \{ (\widetilde{Z}_i, \widetilde{Y}_i, \widetilde{X}_i) \}_{i \in [n]}, U \big) \in D \Big) \leq C \cdot \mu(D),
+\end{align*}
+where $\mu$ denotes the product of counting measure on $\{1,2\}^n$ and Lebesgue measure on $\mathbb{R}^{(d_{X}+d_{Y})n} \times [0,1]$.
+\end{enumerate}
+\end{lemma}
+The proof of this lemma is deferred to Appendix~\ref{appendix:lemma-proof}.
+\end{reply}
+
+% marginal에 대한 내용이 중요하진 않음. 하지만 derive 과정에서의 detail을 채우지는 못했으니 채우는 과정이 필요하다 
+
+% 이거를 더 엄밀하게 수학적으로 보이는 작업
+
+\begin{itemize}
+    \item Check the proof of \cite{neykov2021minimax}
+\end{itemize}
+
+\textcolor{red}{답변이 다소 techinical한 느낌}
+
+\begin{point}
+The statements in Theorem 2 are somewhat confusing. In Algorithm 1, the authors construct $\mathcal{D}_{\widetilde{n}}$ of size $\widetilde{n}$ and then apply a conditional independence test $\phi$ using $\mathcal{D}_{\widetilde{n}}$. However, in Theorem 2, the test $\phi$ is applied to $\left\{\left(X_i, Y_i, Z_i\right)\right\}_{i=1}^n \stackrel{i . i . d .}{\sim} P$, which consists of $n$ samples rather than $\widetilde{n}$. Besides, $\widetilde{\phi}$ is a conditional two-sample test based on the given two samples $\big\{\big(Y_i^{(1)}, X_i^{(1)}\big)\big\}_{i=1}^{n_1}$ and $\big\{\big(Y_i^{(2)}, X_i^{(2)}\big)\big\}_{i=1}^{n_2}$, rather than $n$ i.i.d. samples $\left\{\left(X_i, Y_i, Z_i\right)\right\}_{i=1}^n \stackrel{i . i . d .}{\sim} P$. As shown in the proof, the test $\widetilde{\phi}$ can be expressed as $\widetilde{\phi}=$ $\mathds{1}\left(\widetilde{n}_1 \leq n_1\right) \mathds{1}\left(\widetilde{n}_2 \leq n_2\right) \phi_{\widetilde{n}}$, where $n_1$ and $n_2$ are given. Consequently, the interpretation of the conditioning event\\ $\left\{N_1=\sum_{i=1}^n \mathds{1}\left(Z_i=1\right)=n_1, N_2=\sum_{i=1}^n \mathds{1}\left(Z_i=2\right)=n_2\right\}$ with respect to $\widetilde{\phi}$ is unclear. Further clarification is necessary to ensure correctness. 
+\end{point}
+
+\begin{reply}
+We thank the reviewer for carefully pointing out this issue. In the original version, Theorem 2 was developed from the perspective of conditional independence testing, which led us to introduce the conditioning event $(N_1=n_1, N_2=n_2)$. However, since the outcome $\widetilde{\phi}$ is itself a conditional two-sample test, such conditioning is unnecessary. In the revised manuscript, Theorem 2 has therefore been reformulated entirely within the conditional two-sample framework, consistent with Algorithm~1, and the conditioning step has been removed. This ensures that the statement and proof are both clearer and fully aligned with the intended setting.
+\end{reply}
+
+\begin{point}
+For the classifier-based approach, Assumption 1(b) is extremely restrictive. Even for a correctly specified parametric model $\widehat{r}_X$ (let alone more flexible nonparametric techniques), we have $E_P\left[\left\{\widehat{r}_X\left(X^{(2)}\right)-r_X\left(X^{(2)}\right)\right\}^2 \mid \widehat{r}_X\right]=O_p\left(m^{-1}\right)$, which implies that Assumption 1(b) is not satisfied. Consequently, unbalanced sample splitting becomes necessary, and taking $m=\lfloor n / 2\rfloor$ in practice is not justifiable. Notably, Assumption 2(b) in \cite{hu2024two} is weaker than Assumption 1(b) in this paper; see the discussions after Theorem 1 in Hu and Lei (2024). A crucial question remains: how can the sample be split in a data-adaptive manner when unbalanced sample splitting is unavoidable?
+% 마지막 질문이 핵심. 
+
+\end{point}
+\begin{reply}
+  %       The assumptions for the density ratio are as follows:
+  %       \begin{enumerate}
+  %       \item Assumption 2(a) from \cite{hu2024two}:
+  %       \begin{align*}
+  %       \mathbb{E}_{P}[(\hat{r}{X}(X^{(2)}) - r_{X}(X^{(2)}))^{2} \mid \hat{r}_{X}]^{1/2} = o_{p}(1).
+  %       \end{align*}
+  %       However, in Case 1 in \cite{hu2024two}, this assumption is modified as:
+  %       \begin{align*}
+  %       \mathbb{E}_{P}[(\hat{r}_{X}(X^{(2)}) - r_{X}(X^{(2)}))^{2} \mid \hat{r}_{X}]^{1/2} = o_{p}(1/\sqrt{n_{11}}),
+  %       \end{align*}
+  %       where $n_{11}$ denotes the number of samples from the group with $Z = 1$ that are used in constructing the test statistic.
+  %       \item \text{Assumption 1(b)} of ours For any $\epsilon > 0$, the density ratio estimator satisfies
+		% \begin{align*}
+		% 	\lim_{n \to \infty} \sup_{P \in \mathcal{P}_0} \mP_P \bigl( m \mE_P[\{\widehat{r}_X(X^{(2)}) - r_X(X^{(2)})\}^2 \given \widehat{r}_X] \geq \epsilon \bigr) = 0,
+		% \end{align*}
+  %       which implies
+  %       \begin{align*}
+  %       \mathbb{E}_{P}[(\hat{r}_{X}(X^{(2)}) - r_{X}(X^{(2)}))^{2} \mid \hat{r}_{X}]^{1/2} = o_{p}(1/\sqrt{m}),
+  %       \end{align*}
+  %       \item \text{Assumption 2(b)} of ours $\sup_{P \in \mathcal{P}_0} \mE_P[ \{r_X(X^{(2)})\}^2] < \infty$ and $\sup_{P \in \mathcal{P}_0}\mE_P\bigl[ \big\{\widehat{r}_X\bigl( X^{(2)} \bigr)-r_X\big(X^{(2)}\big)\big\}^2 \bigr] = o(m^{-1/2})$.
+  %   \end{enumerate}
+Thank you for your careful reading and insightful feedback. We would like to clarify that our Assumption~1(b) is conceptually aligned with Assumption~2(b) in \cite{hu2024two}, particularly Case~1. Both conditions require that the density ratio estimator achieves sufficiently small root mean squared error (RMSE). Specifically, we assume
+% conceptually가 아닌 정확하게 같음을 언급
+% Hu and Lei (2024)의 notation은 어떻고, 우리 notation은 이렇다. 전개를 해보면 두 개가 같다는 식으로 가야할 것 같다. 
+% E_P와 o_P를 같게 하던가, 없애던가 통일
+% simulation을 통해서 equal splitting이 어느 정도 좋은 성능을 보인다 (data adaptive하게 splitting하는 것은 이 project의 scope를 벗어난 것 같다) ratio를 달리하면서 실험해봤을 때 나온 결과들을 비교
+\begin{align*}
+\lim_{n \to \infty} \sup_{P \in \mathcal{P}_0} \mathbb{P}_P \left( m \mathbb{E}_P \Big[ \big\{ \hat{r}_X(X^{(2)}) - r_X(X^{(2)}) \big\}^2 \middle| \hat{r}_X \Big] \geq \epsilon \right) = 0,
+\end{align*}
+which implies that
+\begin{align*}
+\mathbb{E}_{P}\left[(\widehat{r}_{X}(X^{(2)}) - r_X(X^{(2)}))^2 \mid \widehat{r}_X\right]^{1/2} = o_P(m^{-1/2}).
+\end{align*}
+The assumptions stated in \cite{hu2024two} are:
+\begin{assumption}[Assumption 2 of \cite{hu2024two}]
+\begin{enumerate}
+\item[(a)] $\big|\widehat{G}_{11}-G_{11}\big|_{2, *}=o_P(1).$
+\item[(b)] $\left| \mathbb{E}(\hat{G}_{11} - G_{11})\hat{D}_{11} - \mathbb{E}(\hat{G}_{11} - G_{11})\mathbb{E}_*(G_{11}\hat{D}_{11}) \right| = o_P(1 / \sqrt{n_{11}}).$
+\end{enumerate}
+\end{assumption}
+Here, $\mathbb{E}_*(\cdot)$ and $|\cdot|_{q, *}$ denote the conditional expectation and conditional $\ell_{q}$ norm given the density ratio estimates $\hat{g}$, respectively. For applying the central limit theorem, Assumption 2(b) plays a crucial role. In particular, in Case 1 of \cite{hu2024two}, the condition required for the CLT is $\sqrt{n_{11}}\big|\widehat{G}{11}-G{11}\big|_{2,* }=o_P(1)$, which translates to:
+\begin{align*}
+\mathbb{E}_{P}\left[(\widehat{g}(X_{11}) - g(X_{11}))^2 \mid \widehat{g}\right]^{1/2} = o_P(n_{11}^{-1/2}),
+\end{align*}
+where $n_{11}$ denotes the number of samples used to compute the test statistic, which coincides with our sample size $m$. As the assumption in \cite{hu2024two} is also stated in square root form, it is clear that this condition is equivalent to the one in \cite{hu2024two}. In terms of practical implementation, various density ratio estimation techniques are known to achieve this convergence rate under standard conditions.
+
+
+
+\end{reply}
+
+
+
+\begin{itemize}
+    \item Check the technique of \cite{GUO2024rank}
+\end{itemize}
+
+\textcolor{red}{답변 미완성: splitting in a data-adaptive manner 본질적으로 어려운 문제}
+
+\begin{point}
+For the MMD-based approach, the authors adopt a linear-time MMD statistic instead of the quadratic-time MMD statistic. In marginal two-sample testing, the quadratic-time MMD test is known to achieve minimax optimal power. By contrast, the linear-time test generally exhibits lower power by more than a constant factor and has a worse rate \citep{ramdas2015adaptivity}, making it less favorable in practice. Although the standard permutation approach is not applicable to conditional two-sample testing, the authors should explore the strategies for calibrating the quadratic-time statistic, given its desirable theoretical properties.
+\end{point}
+
+\begin{reply}
+While the standard permutation test is indeed not directly applicable to conditional two-sample testing due to the violation of exchangeability under the null hypothesis (i.e., when the conditional distributions are equal), recent advances provide promising alternatives. In particular, \citet{bordino2025density} propose a resampling-based method, called the Density Ratio Permutation Test (DRPT), which restores exchangeability under the null by leveraging estimated density ratios. Their framework offers a principled way to apply permutation-based inference in the conditional setting, and they formally establish the validity of this approach. Notably, Proposition 11 in their work provides theoretical guarantees on the type I error control when density ratios are estimated from data, making this method a practical and theoretically sound alternative to linear-time MMD tests for conditional two-sample testing.
+\end{reply}
+
+\textcolor{red}{\citet{bordino2025density} 한계 지적함으로써 linear-time MMD 연구가 필요없는 연구가 아니다 강조 / trade-off 존재 (e.g., splitting ratio, computational cost) / Quadratic-time MMD bootstrap 결과에 대한 comment도 추가 필요}
+
+
+\begin{point}
+No single test exhibits consistent performance across all scenarios, often displaying erratic size or power behavior in certain cases. A crucial question in practice, therefore, is: which test should one use to draw reliable conclusions? More specifically, which of the two frameworks should be preferred? If opting for the conditional independence-based framework, which conditional independence test should be employed? Alternatively, if selecting the density ratio-based framework, should one use the classifier based test or the MMD-based test?   
+\end{point}
+
+\begin{reply}[reply:B6]
+% One of the central takeaways from our study is that no single conditional two-sample test dominates in all settings. The performance of each method depends critically on the data structure and assumptions of each method. 
+
+% Our simulation design was specifically constructed to highlight this point. Across the scenarios (bounded, unbounded density ratios, low/high dimension), we systemically varied properties such as the marginal distributions of covariates and the difficulty of estimating density ratios. 
+
+% For example:
+% \begin{itemize}
+%     \item In scenarios where the density ratio $\frac{P_{X}^{(2)}(x)}{P_{X}^{(1)}(x)}$ can be well-estimated (e.g. low-dimensional, bounded density ratio), the density ratio-based tests show favorable performance. 
+%     \item In contrast, when the density ratios are difficult to estimate, the conditional independence-based tests tend to be more robust because of their indirect modeling strategy via regression and residuals. 
+% \end{itemize}
+
+% DRT와 CIT 두 개의 장점을 data adaptive하게 모두 가져갈 수 있는 framework가 있을지? 앙상블처럼?
+% block-MMD 실험
+
+% Despite the lack of universal dominance, we believe our empirical findings do permit some practical guidance for practitioners:
+% \begin{itemize}
+%     \item When the covariate space is low-dimensional, density ratio-based tests are often reliable. 
+%     \item In high-dimensional settings, conditional independence-based tests(particularly GCM and PCM) are safer choices due to their regression-based structure. Even if some estimators estimate density ratio well in high-dimensional settings, the computational costs are expensive. 
+% \end{itemize}
+
+% We have added discussion to distill these observations into a brief set of practitioner-oriented recommendations and highlight how assumptions of each test and density ratio estimability can inform the choice of testing framework. We thank the reviewer for encouraging us to address this practical question directly. 
+
+We agree that no single testing method is uniformly best and that reliable practice requires aligning the choice of test with the assumptions that can be credibly met in the application at hand. This is precisely the thrust of our hardness result and of the two frameworks we develop. In the revision, we have added a short "Practitioner's Guide" based on the following explanation. 
+
+\vspace{1em}
+
+\noindent \textbf{1. Which framework should be preferred?}
+Our hardness result shows that without additional structure, no valid conditional two-sample test can have power exceeding its size against any alternatives. Consequently, a user must choose which assumptions to lean on.
+
+\vspace{.25em}
+
+    \textbf{(i) Prefer the CIT framework} when you can fit \textit{stable} regressions for the components required by a chosen CIT. Algorithm 1 transfers the asymptotic size and power guarantees of a CIT computed on i.i.d.~triples $(X, Y, Z)$ to the conditional two-sample test setting, and does not require estimating the marginal density ratio $r_X$. In our experiments, this framework is relatively insensitive to whether $r_X$ is bounded or unbounded, provided the regression is well-behaved. 
+
+    \vspace{.25em}
+
+    \textbf{(ii) Prefer the DRT framework} when you can obtain an accurate estimate of the marginal density ratio $r_X = f_X^{(1)}/f_X^{(2)}$. This converts conditional two-sample test into an ordinary two-sample problem in $(X, Y)$ with importance weights and lets you deploy powerful marginal two-sample tools. The DRT approach is attractive when $r_X$ is plausibly bounded and you have a density ratio estimator suited to the problem. 
+
+\vspace{.5em}
+\noindent \textbf{Empirical summary supporting these choices.} Across Scenarios 1-3, CIT methods maintain relatively stable type I error across bounded/unbounded $r_X$, whereas DRT methods show good performance when $r_X$ is well estimated (bounded case) and poor performance when $r_X$ is poorly estimated (unbounded case). On real data, DRT methods control type I error on the low-dimensional data with simple LLR, but require a richer estimator (KLR) to control type I error on the high-dimensional data, which illustrates that validity of DRT depends on $r_X$ estimation quality. 
+
+\vspace{1em}
+
+\noindent\textbf{2. If using CIT, which conditional independence test?} 
+
+\vspace{.25em}
+    \textit{GCM} or \textit{PCM} with a flexible, well-constructed regression model (RandomForest, XGBoost, etc) shows relatively consistent performance across diverse scenarios. \textit{RCIT} shows powerful performance but exhibits inflated type I error at small sample size in our simulations because it needs relatively large sample to approximate kernel. \textit{WGSC} rejects overly depending on the regression configuration in our simulation with high computational burden.
+
+\vspace{1em}
+
+\noindent\textbf{3. If using DRT, should one prefer the classifier-based test or MMD-based test?}
+
+\vspace{.25em}
+
+    \textit{(i) Classifier-based test: } Prefer this when you suspect location‑type or other alternatives that change the Bayes classification boundary. Our analysis and previous works link the accuracy to total variation distance, so a discriminative shift translates into power. Use the cross-validated version for better sample efficiency. 
+
+    \textit{(ii) MMD-based test: } Prefer this for dispersion/shape changes (e.g., heteroscedasticity, variance structure) where kernel mean discrepancies are sensitive. MMD-based test needs only $r_X$ (not a conditional density ratio) and enjoys a simple Gaussian limit. In Scenario 2, MMD-based methods clearly dominate other DRT methods. If you can afford more computation, the block-wise statistic lowers variance and retains tractable asymptotics. 
+
+    \textit{(iii) Which density ratio estimator? } Our real‑data and appendix analyses show that LLR suffices in low dimensions, whereas KLR (or other flexible estimators) are needed in high dimensions to control size. 
+
+\end{reply}
+
+\begin{point}
+Two Gaussian distributions differing only in their means represent perhaps the easiest case, where a simple linear logistic regression model can correctly specify the density ratio. It would be valuable to assess the performance of the proposed tests when $X^{(1)}$ or $X^{(2)}$ is drawn from heavy-tailed or other non-Gaussian distributions.   
+\end{point}
+
+\begin{reply}
+In response to the reviewer's valuable  suggestion, we have conducted additional experiments to assess the performance of our proposed methods with non-Gaussian, heavy-tailed covariate distributions. While the original Gaussian setting presents a non-trivial challenge due to the unboundedness of the density ratio as discussed in \citet{xu2025estimatingunboundeddensityratios}, we agree evaluating performance under broader distributional settings is critical. 
+
+Accordingly, we have introduced a new scenario (Scenario 4) where the covariates for both groups, $X^{(1)}$ and $X^{(2)}$, are generated from a multivariate $t$-distribution. To align with the existing structure of our simulations, we have implemented this for both unbounded and bounded density ratio cases:
+\begin{itemize}
+    \item \textbf{Scenario 4U}: Covariates are drawn from a standard multivariate t-distribution, creating heavy-tailed and unbounded density ratio. 
+    \item \textbf{Scenario 4B}: Covariates are drawn from a truncated multivariate $t$-distribution on a compact domain, which allows for an assessment of the methods under heavy-tailed distributions while the density ratio remains bounded. 
+    
+\end{itemize}
+
+% More simulations are required.
+The results from these additional simulations have been included in the revised manuscript. We believe these additions provide a more comprehensive evaluation and thank the reviewer for prompting this important extension.
+
+\textcolor{red}{평균만 다른 경우 말고 variance 등 higher moment가 다른 경우 실험 가능? 실험을 했다면 그 부분도 강조?}
+
+% In response, we have conducted new simulation studies where $X^{(1)}$ or $X^{(2)}$ is drawn from heavy-tailed (e.g., multivariate $t$) or truncated distributions. These scenarios are designed to introduce both heavy-tailed and bounded support, allowing us to assess how distributional properties affect density ratio estimation and test performance. A summary of these results is presented in the updated Section 5.1, with detailed figures and rejection rates reported in the supplementary material. 
+% 범위 지정해주기
+
+\end{reply}
+
+% Gaussian이 쉽다는 것에 반박하는 글이 너무 김. 포인트는 다른 분포에서도 실험하는 것을 요구하는 것이기 때문에 이 부분을 강조
+% 요약된 실험 결과와 revised version 어떤 부분에서 찾을 수 있는지 언급
+
+\begin{point}
+In Section 5.2 , since $X^{(2)}$ is sampled with probability proportional to $\exp \left(-x_1^2\right)$, the linear logistic regression (LLR) model misspecifies the density ratio. This misspecification may explain the poor performance of LLR on the superconductivity dataset. Nonetheless, an explanation of why LLR performs well on the diamonds dataset would be beneficial.   
+\end{point}
+
+\begin{reply}
+    We appreciate the reviewer's close reading and thougtful interpretation of the real data results in Section 5.2. The comment raises an important point about the link between sampling scheme and the performance of the LLR-based density ratio estimator.
+    
+    We would like to clarify that the effectiveness of LLR in estimating the density ratio does not primarily hinge on the sampling mechanism itself, but rather on the separability of the two samples $X^{(1)}$
+    While it is true that sampling \(X^{(1)}\sim \mathrm{Unif}\) and \(X^{(2)}\propto \exp(-x_1^2)\) is identical across both datasets, the \emph{classification ability} of LLR—and hence its density–ratio estimation—depends critically on the \emph{intrinsic dimensionality} and the separability of \(X^{(1)}\) and \(X^{(2)}\).
+
+\begin{itemize}
+  \item \textbf{Diamonds (6\,dimensions).}  With only \(s=6\) features, the two samples \(X^{(1)}\) and \(X^{(2)}\) occupy \emph{low–dimensional} subspaces.  In this setting, even a misspecified linear boundary
+  \[
+    \log r(x) \;=\; \log\frac{p^{(2)}(x)}{p^{(1)}(x)} \;\approx\; \beta_0 + \beta_1 x_1 + \cdots + \beta_6 x_6
+  \]
+  achieves high classification accuracy.  Consequently, LLR recovers the sign of \(\log r(x)\) nearly perfectly, yielding accurate importance weights and strong test power.
+
+  \item \textbf{Superconductivity (81\,dimensions).}  In contrast, with \(d=81\) descriptors, the same linear model is \emph{severely underparameterized}, making the classes \(\{X^{(1)},X^{(2)}\}\) poorly separable by a single hyperplane.  LLR’s classification error rate rises sharply, biasing the resulting density–ratio estimates and degrading test power.
+\end{itemize}
+
+To substantiate this explanation, we will include in revised Section 5.2 a pair of plots showing the empirical classification error of LLR on both datasets:
+
+These visualizations will clearly demonstrate near–zero error on the 6–dimensional diamonds data versus substantially higher error on the 81–dimensional superconductivity data, thereby explaining the observed performance gap.
+\end{reply}
+
+\begin{point}
+The medium heuristic is arguably the most popular method for selecting the band-
+width. Is there a specific reason why the bandwidth for the linear-time MMD test is
+fixed at 1 across all experiments   
+\end{point}
+
+\begin{reply}
+    Thank you for this important point regarding bandwidth selection for the MMD-based test. In our experiments, the bandwidth for the Gaussian kernel in the linear-time MMD test was fixed at a constant value of one as you mentioned. This choice was made primarily to ensure a consistent baseline for comparison across all methods and experimental scenarios, thereby isolating the performance of the testing framework itself from the separate and complex issue of data-adaptive bandwidth selection. We agree that the median heuristic is a widely adopted and often effective empirical strategy for bandwidth selection in the context of two-sample testing. However, as it is a heuristic, its performance is not always optimal and it lacks theoretical guarantees for maximizing test power across all possible alternatives. Our experiments in Section 5 show that the performance of kernel-based methods can be sensitive, and a median heuristic may not be universally superior.
+\end{reply}
+
+\textcolor{red}{Median heuristic에 대해 너무 단점만 나열? 리뷰어의 제안에 수긍하고 리비젼에 추가했다는 뉘앙스는 어떤지? 그 후 장점 및 단점 이야기}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.85\linewidth]{Figures/simulation_bandwidth_comparison.pdf}
+    \vspace{1em}
+    \includegraphics[width=0.85\linewidth]{Figures/simulation_bandwidth_comparison2.pdf}
+    \caption{
+        Rejection rate comparison under various bandwidth choices for the LinearMMD test.
+        \textbf{Top:} High-dimensional dataset (Superconductivity).
+        \textbf{Bottom:} Simulation 2 Bounded case.
+    }
+    \label{fig:bandwidth_comparison_all}
+\end{figure}
+
+% median heuristic을 썼을 때 이론적으로 type I error가 control된다는 것을 보장할 수 없음 
+% simplicity와 theoretically rigorous를 위해 bandwidth를 고정
+% 그러나 다양한 bandwidth에 대해 실험했고, 하지만 median heuristic이 항상 best가 아님. 
+% median heuristic vs {fixed bandwidths} 비교하는 것을  supplementary Section에 추가  
+% reply 내용 본문에 반영 (파란색으로 반영)
+% 인위적인 example -> agree / continuous하게 ? stable의 정의? 깊이 있게 가면 매우 깊이 있게 논의가 가능 / 충분히
+% conditional permutation test 논문은 이렇게 했고, 이런 단점이 있어서 우린 이렇게 한다.는 식으로 답변에 활용 가능
+
+
+\begin{point}
+On line 347, why does the expectation of the rank sum statistic equal zero under the null hypothesis?
+\end{point}
+\begin{reply}
+We acknowledge that the previous text contained a typo under the null hypothesis, the expectation of the statistic is $1/2$, not zero. This correction aligns with the example from \cite{hu2024two} (without normalization). We have revised the manuscript accordingly.
+\end{reply}
+
+
+\reviewersection % Reviewer C
+\section*{Summary}
+In this paper the authors consider the problem of conditional two-sample testing, where the goal is to test the equality of two conditional distributions $P_{Y \given X}^{(1)}$ and $P_{Y \given X}^{(2)}$, based on observed samples $\{X_i^{(1)}, Y_{i}^{(1)}\}_{i=1}^{n_1}$ and $\{X_i^{(2)}, Y_{i}^{(2)}\}_{i=1}^{n_2}$ from the corresponding joint distributions. The paper first establishes a hardness result for the conditional two-sample problem by relating it to conditional independence tests (CITs), which is known to be intrinsically hard. Then the authors propose two general frameworks:
+\begin{itemize}
+    \item Converting existing conditional independence testing procedures to conditional two-sample test through a subsampling approach.
+    \item Transforming the problem to a marginal two-sample testing problem between the joint distributions $P_{XY}^{(1)}$ and a weighted version of $P_{XY}^{(2)}$ where the weight is given by the density ratio between $X_1^{(1)}$ and $X_1^{(2)}$. To show applicability of this framework, the authors adapt the well known classifier based two-sample test and the kernel based two-sample test to this setting.
+\end{itemize}
+
+\noindent Furthermore, the authors justify their approaches with theoretical results and simulation studies. 
+
+\section*{Comments}
+The article tackles a significant and timely problem in statistical methodology with clear relevance to modern applications. The proposed frameworks, particularly their connections to conditional independence testing, are not only conceptually interesting but also open the door to leveraging powerful techniques from that area. Nevertheless, several aspects require clarification and justification. 
+
+\begin{reply}
+We sincerely appreciate for your thoughtful and encouraging evaluation. We are pleased that you found the problem timely and the proposed frameworks conceptually compelling. In response to your request for further clarification and justification, we have revised the manuscript to improve theoretical exposition and practical interpretation. We have addressed each of your comments in detail below, and we hope that the revised version meets the expectation for clarity, rigor, and practical relevance.  
+\end{reply}
+
+
+\begin{point}
+The core idea for using CIT based methods for the conditional two-sample problem is to use subsampling where on average $O(\sqrt{n \log (1 / \varepsilon)})$ many samples are discarded, which can affect the finite sample performance. The authors do acknowledge this limitation and provides experiments for choices of $\varepsilon$. I believe this requires a more thorough discussion, for example one can compare the power of the proposed test and the corresponding CIT in an oracle setting where we generate $Z \in\{1,2\}$ and then generate $(X, Y) \mid Z \sim P_{X Y}^{(Z)}$.
+\end{point}
+
+\begin{reply}\label{reply:C1}
+The reviewer's point concerning the finite-sample efficiency loss due to the subsampling procedure is both insightful and important for a practical understanding of the proposed framework. To address this, we have conducted an additional simulation study designed to quantify this effect by comparing the power of our proposed test against an oracle equivalent. 
+
+In the oracle setting, we generate an i.i.d. sample from the joint distribution $P_{XYZ}$, where $Z \in \{1, 2\}$ is a random variable. This setup corresponds to the native setting for a conditional independence test and does not require discarding any samples. 
+
+% 실험 결과에 대한 해석 추가
+\end{reply}
+\textcolor{red}{실험 결과가 어디에 있는지, 어떤 결과를 얻었는지 설명}
+
+\begin{point}
+The discussion about stability of the CIT method provided after Algorithm 1 needs more clarity. It would be beneficial for the reader if the authors clarify what they mean by stability when this is first mentioned. To my understanding it appears that the current discussion provides an alternative approach to Algorithm 1 where no samples are discarded.
+\end{point}
+\begin{reply}
+In the revised manuscript, we have added Definition~1 to explicitly introduce the notion of stability at the point where it is first mentioned. As clarified there, stability should be understood in the context of the coupling argument for Algorithm~1, given the original dataset with fixed group sizes and an auxiliary i.i.d.~dataset from $P_{XYZ}$, stability formalizes whether the difference between the two, from the perspective of the test statistic, vanishes asymptotically. This makes precise in what sense certain tests can use all $n$ samples without subsampling.
+\end{reply}
+
+
+
+\begin{point}
+Building on the previous comment, this alternative approach seems underdeveloped. While Algorithm 1 and Theorem 2 provides a general CIT based framework, this alternative approach seems highly dependent on the specific CIT method and its implementation. A case-by-case evaluation seems insufficient for building a general framework and it would be great to have more concrete guidelines for this alternative approach.
+\end{point}
+
+\textcolor{red}{Concrete guideline 제시}
+
+\begin{point}
+Additionally, Example 1 assume knowledge of conditional expectations and Example 2 is an extreme case instability under estimation. I think a more detailed discussion is required on how estimation affects instability and as a consequence the alternative approach.
+\end{point}
+
+\begin{itemize}
+    \item Add simulations of regression error and testing performance.
+\end{itemize}
+
+\begin{point}
+Theorem 1 establishes that conditional two-sample testing is generally impossible (achieving non-trivial power) without further assumptions, implying that structural constraints (for example, smoothness conditions) are necessary. In the density ratio based approaches (henceforth abbreviated as DRT), it is not immediately clear how such structural assumptions are implicitly incorporated. It would be great if the authors can discuss how the assumptions for DRT (Assumptions 1 and 2, in particular to my understanding 1(b) and 2(b)) serve as necessary structural conditions to overcome the hardness from Theorem 1.
+\end{point}
+
+\begin{reply}
+Thank you for raising this important point. Theorem 1 highlights a fundamental hardness result: conditional two-sample testing is generally impossible without additional structural assumptions. Our density ratio based testing framework (DRT) addresses this challenge by reducing the conditional problem to a marginal one an approach that only works when the density ratio is well-defined and consistently estimated.
+
+In this context, Assumptions 1(b) and 2(b) are not just technical conditions but critical structural requirements. Both ensure accurate estimation of the density ratio $r_X = f_X^{(1)} / f_X^{(2)}$, which is key to reconstructing the target distribution. While we only have access to samples from $f^{(2)}_{Y X}$, our goal is to compare $f^{(1)}_{Y X}$ against $f_{Y X} = r_X \cdot f^{(2)}_{Y X}$. By applying importance weighting to samples from $f^{(2)}_{Y X}$ using the estimated density ratio, we can approximate $f_{Y X}$ and thereby enable valid comparisons with $f^{(1)}_{Y X}$.
+
+We will clarify this point further in the revised version, emphasizing how these assumptions make the DRT approach viable. We sincerely appreciate your thoughtful and constructive feedback.
+\end{reply}
+
+\begin{point}
+Under the DRT setting, Assumptions 1(b) and 2(b) place restrictions on the convergence rates of the density ratio estimator. It would be beneficial for the reader if there is a discussion about whether these rates are achievable in practice, citing relevant sources and the corresponding estimators which achieve these rates.
+\end{point}
+
+\begin{reply}
+Thank you for your careful reading and insightful feedback. You’re absolutely right that Assumptions 1(b) and 2(b) impose convergence rate conditions on the density ratio estimator, and it is important to discuss whether these rates are practically achievable.
+
+Specifically, our Assumption 1(b) is directly aligned with Assumption 2(b) of \cite{hu2024two} (particularly Case 1), which requires the density ratio estimator to achieve a sufficiently small root mean squared error (RMSE). In our notation, this assumption is expressed as
+\begin{align*}
+\lim_{n \to \infty} \sup_{P \in \mathcal{P}_0} \mathbb{P}_P \left( m \mathbb{E}_P \left[ \left\{ \hat{r}_X(X^{(2)}) - r_X(X^{(2)}) \right\}^2 \middle| \hat{r}_X \right] \geq \epsilon \right) = 0,
+\end{align*}
+which implies
+\begin{align*}
+\mathbb{E}_{P}\left[(\widehat{r}_X(X^{(2)}) - r_X(X^{(2)}))^2 \mid \widehat{r}_X\right]^{1/2} = o_P(m^{-1/2}).
+\end{align*}
+Regarding whether this rate is achievable in practice, several density ratio estimation techniques are known to meet these rates under standard conditions:
+\begin{itemize}
+    \item \textbf{Parametric models:} For correctly specified linear (or exponential family) models (e.g., $\log r_X(x) = \theta^\top x$), least-squares density-ratio estimators achieve
+    \begin{align*}
+        \mathbb{E}_{P}\left[(\widehat{r}_X(X) - r_X(X))^2\right] = O(m^{-1}),
+    \end{align*}
+    as shown in \cite[Theorem~10]{kanamori2010theoretical}.
+
+    \item \textbf{Kernel-based estimators:} If the true density ratio $r_X$ lies exactly in the reproducing kernel Hilbert space (RKHS) associated with the chosen kernel, and the RKHS is finite-dimensional or has sufficiently fast eigenvalue decay, kernel-based estimators such as uLSIF (\emph{unconstrained Least-Squares Importance Fitting}) can achieve
+    \begin{align*}
+        \mathbb{E}_{P}\left[(\widehat{r}_X(X) - r_X(X))^2\right] = O(m^{-1}),
+    \end{align*}
+    as shown in \cite[Theorem~2]{kanamori2012statistical}.
+
+    \item \textbf{Neural network-based estimators:} When the data distribution is supported on a low-dimensional manifold ($d^* \ll d$), deep ReLU networks can achieve
+    \begin{align*}
+        \mathbb{E}_{P}\left[(\widehat{r}_X(X) - r_X(X))^2\right] = O\left(m^{-1} \log^c n\right),
+    \end{align*}
+    for some $c>0$, as demonstrated by \cite[Theorem~3.1]{zheng2022nonparametric}.
+
+    \item \textbf{General nonparametric estimators:} Without structural assumptions, if $r_X$ belongs to a $\beta$-Hölder class, the minimax optimal rate is
+    \begin{align*}
+        \mathbb{E}_{P}\left[(\widehat{r}_X(X) - r_X(X))^2\right] = O\left(m^{-2\beta/(2\beta + d)}\right),
+    \end{align*}
+    which is slower than $O(n^{-1})$ unless $\beta$ is large relative to $d$~\citep[Theorem~3]{nguyen2010estimating}.
+\end{itemize}
+
+These examples highlight that in practice, achieving the $O(m^{-1})$ convergence rate is feasible under common parametric and smoothness assumptions, and even in some neural network settings. We \textcolor{red}{will revise} the manuscript to emphasize this point more clearly and to cite these references as examples of estimators achieving these rates. 
+\end{reply}
+
+
+\begin{point}
+One of the specific DRT approaches is based on the kernel based MMD statistic. However, the authors only discuss the linear MMD statistic. It is well known that the quadratic MMD achieves much better power than the linear one. While the authors acknowledge the difficulty of implementing the quadratic one using permutation tests, is it possible to have a version of the quadratic MMD test and calibrate that using multiplier bootstrap as in \cite{gretton2009fast}?
+\end{point}
+
+
+\begin{point}
+Building on the previous point, the manuscript's discussion of permutation-based implementations for the quadratic-time MMD feels incomplete. Several permutation strategies already exist for conditional independence tests-for example, \cite{berrett2020conditional,candes2018panning,kim2022local}. Because Theorems 1 and 2 establish a link between conditional independence tests and conditional two-sample tests, it seems natural to ask whether those existing strategies could be adapted to produce a permutation test in the quadratic-time setting. If such an adaptation is difficult, a detailed explanation of the conceptual or computational obstacles would be helpful.
+\end{point}
+
+\begin{reply}
+    We appreciate the reviewer’s thoughtful comments regarding permutation-based implementations for the quadratic-time MMD in conditional two-sample testing. 
+
+   As you point out, several valid permutation methods have been proposed for conditional independence testing, including \citet{berrett2020conditional}, \citet{candes2018panning}, and \citet{kim2022local}. The connection between conditional independence testing and conditional two-sample testing established in our Theorems 1 and 2 naturally raises the question of whether these permutation strategies can be adapted to conditional two-sample settings. 
+
+   A recent work by \citet{bordino2025density} makes significant progress in this direction. Their method, Density Ratio Permutation Test (DRPT), adapts the Conditional Permutation Test (CPT) of \citet{berrett2020conditional} by leveraging the density ratio to restore exchangeability under the null. This method permits valid permutation inference under the null hypothesis, provided that the density ratio is known or constant. 
+    
+     
+
+\end{reply}
+
+\textcolor{red}{더 detailed discussion 필요? 본문에 어떻게 반영했는지 설명?}
+
+\begin{point}
+Building on the authors' classifier-based conditional two-sample tests, recent work has focused on local conditional comparisons - specifically, testing whether $P_{Y \mid X}^{(1)}$ equals $P_{Y \mid X}^{(2)}$ at a given covariate value $X=x_0$ (see \cite{linhart2023lc2st}). Could the proposed framework be adapted to develop such point-wise conditional tests?
+\end{point}
+
+\begin{reply}
+    The proposed frameworks in our paper are designed for global conditional two-sample testing, that is, for testing the equality of the conditional distributions $P_{Y \given X}^{(1)}$ and $P_{Y \given X}^{(2)}$ over the distribution of $X$ as a whole. Adapting these frameworks to point-wise conditional testing, $P_{Y \given X}^{(1)}(\cdot \given x_0) = P_{Y \given X}^{(2)}(\cdot \given x_0)$ at a fixed covariate value $x_0$, is not straightforward.
+
+    The main challenge is that, at a fixed $x_0$, the effective sample size is typically much smaller, and the distributional assumptions required for global validity do not automatically transfer to the local setting. Our classifier-based and kernel-based approaches rely on density ratio estimation on the full support of $X$, which may not be feasible when restricted to a single point or a small neighborhood around $x_0$. In particular, the theoretical guarantees established  in our work depend on averaging over the distribution of $X$, and the asymptotic normality results for the test statistics require sufficient data in every region of the covariate space. 
+
+    Recent work such as \citet{linhart2023lc2st} has developed specialized methods for local conditional two-sample testing, which are tailored to the challenges of inference at a fixed $x_0$. These methods typically involve local smoothing or nearest-neighbor techniques to borrow strength from nearby covariate values, and their theoretical analysis requires different tools than those used in our global frameworks.
+
+    In summary, while our general frameworks provide a foundation for global conditional two-sample testing, their direct application to point-wise conditional testing is not justified by our theory. Adapting our methods to the local setting would require substantial methodological and theoretical modifications to account for the reduced sample size and the need for local smoothing or regularization.
+\end{reply}
+
+\begin{point}
+There appears to be some minor inconsistency between Theorem 2 and Algorithm 1 . Specifically, Algorithm 1 defines $Z_i$ for $1 \leq i \leq \tilde{n}_1$ and similarly for $\tilde{n}_2$, but Theorem 2 defined $N_1$ and $N_2$ using the full sample size $n$. I am not sure what happens for the discarded samples as those $Z_i$ are never defined.
+\end{point}
+
+\begin{reply}
+    Thank you for your careful reading. In fact, there is no contradiction between the statements in Theorem 2 and the construction in Algorithm 1. In Theorem 2, $N_1$ and $N_2$ refer to the counts in the original sample of size $n$, namely
+    $$
+    N_1 = \sum_{i=1}^{n}\mathds{1}(Z_i=1), \quad N_2 = \sum_{i=1}^{n}\mathds{1}(Z_i=2).
+    $$
+
+    Algorithm 1 then selects a subsample of size $\tilde{n}$ by drawing $\tilde{n}_1 \sim \text{Binomial}(\tilde{n}, n_1/n)$, setting $\tilde{n}_2 = \tilde{n} - \tilde{n}_1$, and using only the first $\tilde{n}_1$ observations with $Z = 1$ and the first $\tilde{n}_2$ observations with $Z=2$. Any remaining observations are simply ignored by the test. 
+
+    Accordingly, when we write in the proof of Theorem 2, $\tilde{\phi} = \mathds{1}\{\tilde{n}_1 \leq n_1\}\mathds{1}\{\tilde{n}_2 \leq n_2\}\phi_{\tilde{n}},$ the events $\{\tilde{n}_1 \leq n_1\}$ and $\{\tilde{n}_2 \leq n_2 \}$ are understood relative to the fixed full sample counts $n_1, n_2$. The algorithmic discarding of those extra observations does not change the conditioning in Theorem 2, which remains on the original $N_1= n_1, N_2=n_2.$
+
+     
+\end{reply}
+
+\begin{point}
+At first glance, Theorem 2 is framed as an asymptotic result. Yet any finite-sample valid CIT $\phi$ would appear to satisfy the same assumptions. If that is correct, could the guarantees for Algorithm 1 be reformulated to hold in finite samples as well? A brief remark following Theorem 2 would help clarify this point.
+\end{point}
+
+\begin{reply}
+    %--------------------------------------
+    % ver.0
+    %--------------------------------------
+    
+\end{reply}
+
+\begin{point}
+For completeness, please include the explicit refined bound for $k^{\star}$ in the supplementary material.
+\end{point}
+
+\begin{reply}[reply: C12]
+In the main text, we define $k^{\star}$ using the multiplicative Chernoff bound for the event $\{\tilde{n}_1 > n_1\}$, with
+\begin{align*}
+\tilde{n}_1 \sim \operatorname{Binomial}(\tilde{n}, n_1 / n), \quad \tilde{n} = k n.
+\end{align*}
+This leads to the explicit bound
+\begin{align*}
+k^{\star} = 1 - \frac{3 \log (\varepsilon)}{2 n_1} - \sqrt{\left(1 - \frac{3 \log (\varepsilon)}{2 n_1}\right)^2 - 1}.
+\end{align*}
+To complement this, we include a refined version $k^{\star}_{\mathrm{refined}}$ based on the Binomial tail:
+\begin{align*}
+k^{\star}_{\mathrm{refined}} := \min \left\{ k > 0 : \mathbb{P}(\operatorname{Binomial}(k n, n_1 / n) > n_1) \leq \varepsilon \right\}.
+\end{align*}
+We restrict $k$ to $(0.5, 1)$, which corresponds to $\delta = k^{-1} - 1 \in (0, 1)$, the regime where the Chernoff bound is accurate and numerical search is most efficient. For reproducibility, \textcolor{red}{we provide} below the Python implementation used in our experiments:
+\begin{lstlisting}[language=Python, caption={Python implementation for $k^{\star}_{\mathrm{refined}}$}]
+import numpy as np
+from scipy.stats import binom
+
+def compute_k_star_refined(n1, n, epsilon, tol=1e-6):
+    def tail_prob(k):
+        tilde_n = int(np.ceil(k * n))
+        p = n1 / n
+        return binom.sf(n1, tilde_n, p)  # P(X > n1)
+
+    k_low, k_high = 0.501, 0.999
+    while k_high - k_low > tol:
+        k_mid = (k_low + k_high) / 2
+        if tail_prob(k_mid) <= epsilon:
+            k_high = k_mid
+        else:
+            k_low = k_mid
+    return k_high
+\end{lstlisting}
+\end{reply}
+
+
+\begin{point}
+A concise discussion of the computational costs associated with the different methods would be very helpful for practitioners.
+\end{point}
+
+\begin{reply}[reply:C13]
+
+% --------------------------------------------------------------------------------
+% Note
+% --------------------------------------------------------------------------------
+% 더 거시적으로 접근하면 좋겠다. density ratio estimator의 성능에 따른, GCM이나 PCM도 어떻게 conditional expectation을 추정하는지에 따라 결과가 달라짐. gam 같은 모델로 CIT도 computational cost가 올라갈 수 있음을 보이는 식으로. 패키지 안에서 기본적으로 병렬 처리하고 있는지 확인. 
+
+% 논문에 나와있는 computational complexity를 언급할 수 있으면 좋겠다. 그럼에도 이걸 써야 하는 이유는 ~ 
+% legend text의 크기를 키울 것 
+% 표로도 한번 시각화
+% 7.5를 기준으로 ylim을 trimming한 뒤 시각화
+% BlockMMD랑 LinearMMD랑 Empirical distribution 시각화 비교
+% block을 제외한 나머지 sample을 density ratio estimation 하는 sample로 사용 
+% cross-fit 처럼 2개의 통계량 구하고 평균 <- 일단 이거부터
+
+
+
+% --------------------------------------------------------------------------------
+% ver.0
+% --------------------------------------------------------------------------------
+% Thank you for the practical suggestion. To better guide practitioners, we have added a new subsection discussing computational costs to the supplementary materials. This new section presents empirical results from our experiment for high dimensional real dataset described in Section 5.2. 
+
+% Our key findings, as summarized in the new figure and table are: 
+
+% \begin{itemize}
+%     \item \textbf{The choice of estimator, not the testing framework, is the primary driver of computational cost.} For instance, in our high-dimensional experiment when $n = 2000$, the GCM test takes only $0.09$ seconds with a linear model(lm), but this increases to $0.41$ seconds when using a more complex model, Random Forest(rf) estimator. A similar, even more dramatic, pattern is observed in our DRT framework, where using KLR for density ratio estimation is consistently slower than LLR. 
+%     \item \textbf{There is a trade-off between computational scalability and model flexibility.} While simple estimators, such as lm and LLR, are extremely fast, they may lack the statistical power to detect complex dependencies. Conversely, flexible estimators, such as rf and KLR, can capture such dependencies at the cost of increased computation time.
+% \end{itemize}
+
+% We believe these additions will enhance the practical utility of our paper by helping researchers make decisions based on their specific data characteristics and computational resources.
+
+
+
+% --------------------------------------------------------------------------------
+% ver.1
+% --------------------------------------------------------------------------------
+A concise discussion of computational cost has been added to the revised manuscript. The main text now summarizes empirical wall-clock times and scaling behavior. Detailed analyses of algorithmic complexity, specific implementation choices, and additional timing plots are provided in the Appendix C.6. The timings reported represent the end-to-end duration for a single test at level $\alpha=0.05$, encompassing all constituent steps such as model fitting, cross-fitting, and null calibration. All results are averaged over 500 simulations. Full details are available in Appendix C.6. 
+
+\noindent\textbf{Summary of computational performance.} The empirical and theoretical analyses suggest the following. 
+\begin{itemize}
+    \item \emph{Computationally efficient methods.} For a fixed kernel and density ratio estimator, the DRT methods MMD-$\ell$, CLF, and CP exhibit empirical runtimes that scale approximately linearly in the sample size $n$. Cross-fitting (denoted $^\dagger$ increases the computational time by a constant factor but preserves the linear scaling. DCP incurs a greater computational cost due to cross-fitting and an orthogonalization step. 
+    \item \emph{Impact of estimator choice.} The choice of estimator is critical to performance. Within the DRT framework, KLR can be substantially slower than LLR, particularly in high dimensions. Similarly, for CITs, random forests (\texttt{rf}) are more computationally intensive than linear models (\texttt{lm}). For problems where the signal is approximately linear or low-dimensional, the simpler estimator (LLR, \texttt{lm}) offer a favorable balance between computational cost and statistical power. 
+\end{itemize}
+
+% Figure 2
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/computational_costs.pdf}
+    \caption{
+        Average computation time (seconds) versus $n$ on the high-dimensional Superconductivity dataset for all methods. Plots reflect the mean over 500 repetitions. Full details are provided in Appendix C.6.
+    }
+    \label{fig:computational-costs}
+\end{figure}
+
+% Table 1
+\begin{table}[h!]
+    \centering
+    \caption{Average computation time (seconds) for Scenario 1(U) across sample sizes($n$). Values are means for 500 repetitions. Methods marked $^\dagger$ use 2-fold cross-fitting.}
+    \label{tab:comp_cost_sim}
+    \begin{tabular}{ccccc}
+    \toprule
+    \textbf{Method} & \multicolumn{4}{c}{\textbf{Sample Size($n$)}} \\ \cmidrule(lr){2-5} & \multicolumn{1}{c}{\textbf{200}} & \multicolumn{1}{c}{\textbf{500}} & \multicolumn{1}{c}{\textbf{1000}} & \multicolumn{1}{c}{\textbf{2000}} \\ 
+    \midrule
+    GCM & 0.029 & 0.037 & 0.071 & 0.193 \\
+    PCM & 0.062 & 0.072 & 0.104 & 0.235 \\
+    RCIT & 0.017 & 0.031 & 0.049 & 0.089 \\
+    WGSC & 5.098 & 6.590 & 7.526 & 12.010 \\
+    \midrule
+    MMD-\(\ell\) & 0.005 & 0.008 & 0.012 & 0.022 \\ 
+    CLF & 0.008 & 0.011 & 0.017 & 0.028 \\
+    $^{\dagger}\mathrm{MMD}\text{-}\ell$ & 0.010 & 0.015 & 0.024 & 0.044 \\
+    $^{\dagger}\mathrm{CLF}$ & 0.017 & 0.023 & 0.034 & 0.058 \\
+    CP & 0.007 & 0.012 & 0.021 & 0.047 \\
+    DCP & 0.071 & 0.243 & 1.090 & 3.895 \\
+    \bottomrule 
+    \end{tabular}
+    
+\end{table}
+
+% Table 2
+\begin{table*}[t!]
+\centering
+\caption{Average computation time (seconds) on the high-dimensional Superconductivity dataset. CIT methods are shown with linear models (\texttt{lm}) and random forests (\texttt{rf}). DRT methods are shown with linear logistic regression (LLR) and kernel logistic regression (KLR). Means are over 500 repetitions and $^\dagger$ indicates 2-fold cross-fitting.}
+\label{tab:comp_cost_highdim}
+\begin{tabular}{c c cccccc}
+\toprule
+\textbf{Method} & \textbf{Estimator} & \multicolumn{6}{c}{\textbf{Sample Size ($n$)}} \\
+\cmidrule(lr){3-8}
+ & & \multicolumn{1}{c}{\textbf{200}} & \multicolumn{1}{c}{\textbf{400}} & \multicolumn{1}{c}{\textbf{800}} & \multicolumn{1}{c}{\textbf{1200}} & \multicolumn{1}{c}{\textbf{1600}} & \multicolumn{1}{c}{\textbf{2000}} \\
+\midrule
+\multirow{1}{*}{RCIT} & & 0.041 & 0.072 & 0.106 & 0.117 & 0.164 & 0.159 \\
+\addlinespace
+
+\multirow{2}{*}{GCM} & \texttt{lm} & 0.013 & 0.021 & 0.037 & 0.058 & 0.089 & 0.092 \\
+ & \texttt{rf} & 0.042 & 0.070 & 0.145 & 0.228 & 0.347 & 0.406 \\
+\addlinespace
+\multirow{2}{*}{PCM} & \texttt{lm} & 0.031 & 0.032 & 0.051 & 0.075 & 0.085 & 0.125 \\
+ & \texttt{rf} & 0.084 & 0.118 & 0.197 & 0.316 & 0.360 & 0.520 \\
+\addlinespace
+\multirow{2}{*}{WGSC} & \texttt{lm} & 0.130 & 0.198 & 0.396 & 0.649 & 0.837 & 1.035 \\
+ & \texttt{rf} & 0.420 & 0.662 & 1.319 & 2.064 & 2.748 & 3.515 \\
+\midrule
+\multirow{2}{*}{MMD-$\ell$} & LLR & 0.030 & 0.037 & 0.053 & 0.059 & 0.074 & 0.088 \\
+ & KLR & 0.043 & 0.139 & 0.661 & 1.337 & 2.862 & 5.069 \\
+\addlinespace
+\multirow{2}{*}{$^\dagger$MMD-$\ell$} & LLR & 0.063 & 0.071 & 0.111 & 0.112 & 0.161 & 0.195 \\
+ & KLR & 0.079 & 0.275 & 1.186 & 2.674 & 5.817 & 9.739 \\
+\addlinespace
+\multirow{2}{*}{CLF} & LLR & 0.067 & 0.068 & 0.089 & 0.092 & 0.127 & 0.178 \\
+ & KLR & 0.061 & 0.209 & 0.799 & 1.806 & 4.251 & 7.902 \\
+\addlinespace
+\multirow{2}{*}{$^\dagger$CLF} & LLR & 0.125 & 0.116 & 0.159 & 0.179 & 0.226 & 0.266 \\
+ & KLR & 0.117 & 0.335 & 1.414 & 3.633 & 8.026 & 13.501 \\
+\addlinespace
+\multirow{2}{*}{CP} & LLR & 0.035 & 0.047 & 0.065 & 0.067 & 0.097 & 0.119 \\
+ & KLR & 0.046 & 0.162 & 0.670 & 1.332 & 3.178 & 5.405 \\
+\addlinespace
+\multirow{2}{*}{DCP} & LLR & 0.245 & 0.387 & 0.868 & 1.692 & 3.200 & 4.903 \\
+ & KLR & 0.214 & 0.491 & 1.884 & 3.693 & 7.181 & 11.895 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\end{reply}
+
+\begin{point}
+A reference link seems to be broken at the end of page 5.
+\end{point}
+
+\begin{reply}
+The broken reference link at the end of page 5 has been corrected in the revised version.
+\end{reply}
+
+
+\begin{point}
+Minor proofreading for typos/grammar is recommended.
+\end{point}
+
+\begin{reply}
+    \begin{itemize}
+        \item $D^{**}(a) = D_a \setminus D_a^{*}$
+        \item split the dataset into two v.s. split the dataset into two parts
+    \end{itemize}
+\end{reply}
+
+
+% 제출 전에 reference 양식 체크
+\bibliographystyle{apalike}
+\bibliography{Revision/revision_reference}
+
+\section{Appendix}\label{appendix:lemma-proof}
+Proof of Lemma~\ref{lemma}. To simplify the presentation, we focus on the case where $d_X = d_Y = 1$. The general case with higher dimensions can be handled similarly, requiring only minor adjustments. As in the proof of \cite{shah2020hardness}, it is enough to establish the following key lemma, which forms the core of their argument.
+\paragraph{Step 1 (Preparation)}
+First consider the case where the support is $\{1,2\} \times (-\infty, \infty)^2$, i.e., $M = \infty$. For any $\delta > 0$, one can select $M' := M'(\delta) < \infty$ such that
+\begin{align*}
+\mathbb{P} \big( \lVert (Y, X) \rVert_{\infty} > M' \big) < \frac{\delta}{2n}.
+\end{align*}
+Define the modified variables $(\bar{Z}, \bar{Y}, \bar{X})$ by setting $\bar{Z} := Z$ always, and setting $(\bar{Y}, \bar{X}) := (Y, X)$ when $\lVert (Y, X) \rVert_{\infty} \leq M'$, while replacing $(\bar{Y}, \bar{X})$ by an independent sample drawn uniformly from $[-M', M']^2$ otherwise. By the union bound,
+\begin{align*}
+\mathbb{P}\big( \forall i \in[n] : (\bar{Z}_i, \bar{Y}_i, \bar{X}_i) = (Z_i, Y_i, X_i) \big) > 1 - \frac{\delta}{2}.
+\end{align*}
+Henceforth, we work with $\{ (\bar{Z}_i, \bar{Y}_i, \bar{X}_i) \}_{i \in [n]}$ (denoted by $\{ (Z_i, Y_i, X_i) \}_{i \in [n]}$ for convenience), and we will construct $\{ (\widetilde{Z}_i, \widetilde{Y}_i, \widetilde{X}_i) \}_{i \in [n]}$ satisfying
+\begin{align*}
+\mathbb{P} \Big( \max_{i \in [n]} \big\| (\widetilde{Z}_i, \widetilde{Y}_i, \widetilde{X}_i) - (\bar{Z}_i, \bar{Y}_i, \bar{X}_i) \big\|_{\infty} < \varepsilon \Big) = 1.
+\end{align*}
+Next, we assume that the conditional densities $p_{Y, X \mid Z=z}(y, x)$ are bounded by some constant $L := L(\delta)$, uniformly over $z \in \{1,2\}$. For any $\bar{L}>0$, define
+\begin{align*}
+S_{\bar{L}} := \big\{(z, y, x) \mid p_{Y, X \mid Z=z}(y, x) > \bar{L} \big\}.
+\end{align*}
+As $\bar{L} \to \infty$, $S_{\bar{L}} \downarrow \varnothing$. Hence, for any given $\delta$, we can choose $\bar{L}(\delta)$ large enough so that
+\begin{align*}
+\mathbb{P}\Big( (Z, Y, X) \in S_{\bar{L}(\delta)}^c \Big) > 1 - \frac{\delta}{2n}.
+\end{align*}
+Construct $(\bar{Z}, \bar{Y}, \bar{X})$ by setting $\bar{Z} := z$, and $(\bar{Y}, \bar{X}) := (Y, X)$ if $(Z, Y, X) \in S_{\bar{L}(\delta)}^c$, while drawing $(\bar{Y}, \bar{X})$ uniformly from $[-M, M]^2$ otherwise. Then the resulting conditional densities are bounded by
+\begin{align*}
+L(\delta) := \bar{L}(\delta) + \frac{\delta}{2n(2M)^2}.
+\end{align*}
+Therefore, we again have
+\begin{align*}
+\mathbb{P} \big( \forall i \in [n] : (\bar{Z}_i, \bar{Y}_i, \bar{X}_i) = (Z_i, Y_i, X_i) \big) > 1 - \frac{\delta}{2}.
+\end{align*}
+\paragraph{Step 2 (Construction)}
+Let $\{A_1, A_2\}=\{\{1\},\{2\}\}$ denote the (trivial) partition of $\{1,2\}$ corresponding to the value of $Z$. Similarly, let $\{B_1, \ldots, B_m\}$ and $\{C_1, \ldots, C_m\}$ be equi-partitions of $[-M, M]$ into intervals of length $2 M / m$. Divide each $C_k$ further into $m^2$ sub-intervals of equal length, denoted by $C_{i j k}$, so that each small interval corresponds to a pair $\big(A_i, B_j\big)$, with $i \in\{1,2\}, j \in[m]$.
+Given a draw $(Z, Y, X)$, we construct $(\widetilde{Z}, \widetilde{Y}, \widetilde{X})$ as follows. Suppose that $X \in A_i, Y \in B_j$, and $Z \in C_k$. Then we set $\widetilde{Z}:=Z$, generate $\widetilde{X}$ uniformly in $C_{i j k,}$ and generate $\widetilde{Y}$ uniformly in $B_j$. By construction, this guarantees $\widetilde{Z} \perp \widetilde{Y} \mid \widetilde{X}$. Moreover, it is clear that by construction
+\begin{align*}
+\mathbb{P} \Big( \max_{i \in [n]} \big\| (\widetilde{Y}_i, \widetilde{X}_i) - (Y_i, Z_i) \big\|_\infty < \frac{2M}{m}, \ \widetilde{Z}_i = Z_i \ \text{for all } i \Big) = 1.
+\end{align*}
+Hence if we take $m$ large enough so that $\frac{2M}{m}<\varepsilon$ we guarantee that $(i)$ is satisfied. What is more may write out the density of $(\tilde{Z},\tilde{Y},\tilde{X})$ as 
+\begin{align*}
+p_{\widetilde{Y}, \widetilde{X} \mid \widetilde{Z}=i}(\widetilde{y}, \widetilde{x}) 
+= \sum_{j,k} \frac{m^3}{(2M)^2} \mathds{1}(\widetilde{y} \in B_j, \widetilde{x} \in C_{ijk}) \cdot \mathbb{P}(Y \in B_j, X \in C_k \mid Z=i).
+\end{align*}
+\paragraph{Step 3 (showing part $(ii)$)}
+Recall that we are assuming that the conditional density satisfies $p_{Y, Z \mid X=x}(y, z) \leq L$ for some constant $L>0$. It is simple to see that the probability that $(X, Y) \in A_i \times B_j$ is bounded as
+\begin{align*}
+\sum_{z \in\{1,2\}} \int_{B_j \times[-M, M]} p_{Y, X \mid X=x}(y, x) \cdot p_z(z) d y d z \leq \frac{L \lambda_n(2 M)^2}{m}+\frac{L\big(1-\lambda_n\big)(2 M)^2}{m}=\frac{L(2 M)^2}{m}.    
+\end{align*}
+It follows that if we have $n$ observations $\big\{\big(Z_i, Y_i, X_i\big)\big\}_{i \in[n]}$, the probability that at least two points $Y_k$ and $Y_{\ell}$ fall into the same interval $B_j$, for some $j \in[m]$, is bounded by
+\begin{align*}
+\bigg(\frac{L(2 M)^2}{m}\bigg)^n\big[m^n-m(m-1) \cdots(m-n+1)\big]=\mathcal{O}\bigg(\frac{n^2\big(L(2 M)^2\big)^n}{m}\bigg).     
+\end{align*}
+Since the number of all possible arrangements with points falling into different intervals $B_j$ is $m(m- 1) \cdots(m-n+1)$, while the total number of possible arrangements for the $n$ points is $m^n$. Denote by $S$ the complement of this event. Note that when $S$ occurs, all $Y_i$ fall into different intervals $B_j$, and vice versa.
+Next, suppose that $D$ is an arbitrary fixed Borel set. We have
+\begin{align*}
+\mathbb{P}\Big(\Big(\big(\widetilde{Z}_i, \widetilde{Y}_i, \widetilde{X}_i\big)_{i \in[n]}, U\Big) \in D\Big) & \leq \mathbb{P}\Big(\Big(\big(\widetilde{Z}_i, \widetilde{Y}_i, \widetilde{X}_i\big)_{i \in[n]}, U\Big) \in D \cap(S \times[0,1])\Big) \\& \quad+\mathbb{P}\Big(\Big(\big(\widetilde{Z}_i, \widetilde{Y}_i, \widetilde{X}_i\big)_{i \in[n]}, U\Big) \notin S \times[0,1]\Big)
+\end{align*}
+We already have a bound on the second term on the RHS above
+\begin{align*}
+\mathbb{P}\Big(\Big(\big(\widetilde{Z}_i, \widetilde{Y}_i, \widetilde{X}_i\big)_{i \in[n]}, U\Big) \notin S \times[0,1]\Big)=\mathcal{O}\bigg(\frac{n^2\big(L(2 M)^2\big)^n}{m}\bigg).    
+\end{align*}
+Suppose now that we randomize the assignment on the set $C_{j k}$. In other words, there is a permutation $\pi:[m] \mapsto[m]$ that assigns each interval $B_j$ to a sub-interval $C_{\pi_j k}$. Denote by $\big(\widetilde{X}^\pi, \widetilde{Y}^\pi, \widetilde{Z}^\pi\big)$ the vectors generated in this manner. Clearly all properties described above hold for $\big\{\big(\widetilde{Z}_i^\pi, \widetilde{Y}_i^\pi, \widetilde{X}_i^\pi\big)\big\}_{i \in[n]}$ for any permutation $\pi$. We have that
+\begin{align*}
+& \frac{1}{m!} \sum_{\pi \in S_m} \mathbb{P}\Big(\big(\big\{\big(\widetilde{Z}_i^\pi, \widetilde{Y}_i^\pi, \widetilde{X}_i^\pi\big)\big\}_{i \in[n]}, U\big) \in D \cap(S \times[0,1])\Big) \\
+& \quad=\frac{1}{m!} \sum_{\pi \in S_m} \int{D \cap(S \times[0,1)]} \prod_{l \in[n]} \sum_{x_l \in\{1,2\}} \sum_{j_l, k_l} \frac{m^3}{(2 M)^2} \mathds{1}\big(\widetilde{z}_l=z_l, \widetilde{y}_l \in B_{j_l}, \widetilde{x}_l \in C_{\pi{j_l} k_l}\big) \\
+& \quad\quad\; \times \mathbb{P}\big(Z=z_l, Y \in B_{j_l}, X \in C_{k_l}\big) \\
+& \quad \leq \frac{(L m^2)^n}{m!} \sum_{\pi \in S_m} \int_{D \cap(S \times[0,1])} \sum_{\big\{x_l\big\},\big\{j_l\big\},\big\{k_l\big\}} \mathds{1}\big(\widetilde{Z}_l^\pi=x_l, \widetilde{Y}_l^\pi \in B_{j_l}, \widetilde{X}_l^\pi \in C_{\pi_{j_l} k_l}\big).
+\end{align*}
+In the above summation, the sequences $\big\{j_l\big\}_{l \in[n]},\big\{k_l\big\}_{l \in[n]}$ are sequences of $n$ numbers from $[m]$. Since the integration is over the set $D \cap(S \times[0,1])$, all indices $j_l$ must be distinct; otherwise, the integral is zero. Thus the summation is effectively over all sequences $\big\{j_l\big\}_{l \in[n]},\big\{k_l\big\}_{l \in[n]}$ such that no two indices $j_l, j_l$ are equal.
+Fixing $\pi_{j l}$ for these $n$ distinct values and permuting the remaining $m-n$ indices, the number of permutations is $(m-n)!$. Since
+\begin{align*}
+ \prod_{l \in[n]} C_{k_l}=\prod_{l \in[n]} \sum_j C_{j k_l},   
+\end{align*}
+contains all unique permutations of $n$ elements (and more), we obtain the following bound:
+\begin{align*}
+& \frac{(L m^2)^n}{m!} \sum_{j_l, k_l} \int_{D \cap(S \times[0,1])} \sum_{\pi \in S_m} \prod_{l \in[n]} \mathds{1}\big(\widetilde{Y}_l^\pi \in B_{j_l}, \widetilde{X}_l^\pi \in C_{\pi_{j_l} k_l}\big) \\
+& \leq \frac{(L m^2)^n(m-n)!}{m!} \sum_{j_l, k_l} \int_{D \cap(S \times[0,1])} \prod_{l \in[n]} \mathds{1}\big(\widetilde{Y}_l^\pi \in B_{j_l}, \widetilde{X}_l^\pi \in C_{k_l}\big) \\
+& \leq \frac{(L m^2)^n(m-n)!}{m!} \mu(D \cap(S \times[0,1])) \leq \frac{(L m^2)^n(m-n)!}{m!} \mu(D).
+\end{align*}
+Therefore, there exists a permutation $\pi^*$ such that
+\begin{align*}
+\mathbb{P}\Big(\big(\big\{\big(\widetilde{Z}_i^{\pi^*}, \widetilde{Y}_i^{\pi^*}, \widetilde{X}_i^{\pi^*}\big)\big\}{i \in[n]}, U\big) \in D \cap(S \times[0,1])\Big) \leq \frac{(L m^2)^n(m-n)!}{m!} \mu(D) .   
+\end{align*}
+Finally, taking $m$ sufficiently large, we obtain
+\begin{align*}
+\mathbb{P}\big(\big(\big\{\big(\widetilde{X}_i^{\pi^*}, \widetilde{Y}_i^{\pi^*}, \widetilde{Z}_i^{\pi^*}\big)\big\}_{i \in[n]}, U\big) \in D\big) \leq \frac{(L m^2)^n(m-n)!}{m!} \mu(D)+\mathcal{O}\big(\frac{n^{2}\big(L(2 M)^2\big)^n}{m}\big) \leq C \mu(D).    
+\end{align*}
+
+
+\end{document}
