@@ -33,6 +33,11 @@ gaussian.kernel <- function(x, y = NULL, h=1) {
   return(res)
 }
 
+median.bandwidth <- function(x, y){
+    dists <- as.vector(dist(rbind(x, y)))
+    bw <- median(dists[dists > 0])
+    return(bw)
+}
 
 # Linear MMD
 MMDl <- function(x12, x22, y12, y22, h_x=1, h_y=1, r_X, seed=NULL){
@@ -57,6 +62,87 @@ MMDl <- function(x12, x22, y12, y22, h_x=1, h_y=1, r_X, seed=NULL){
   sigma_hat <- sum((S_hat_values - S_bar)^2) / (m - 1)
   MMDl_hat2 <- sqrt(m) * S_bar / sqrt(sigma_hat)
   return(MMDl_hat2)
+}
+
+# Block MMD
+MMDb <- function(x12, x22, y12, y22, B_size, h_x=1, h_y=1, r_X, seed=NULL) {
+    if (!is.null(seed)) set.seed(seed)
+    
+    n <- length(y12)
+    S <- floor(n / B_size)
+    
+    if (S < 2) stop("Block size too large for given sample size")
+    
+    MMD_values <- numeric(S)
+
+    for (b in 1:S){
+        idx <- ((b-1)*B_size+1):(b*B_size)
+        xb1 <- x12[idx,,drop=FALSE]
+        xb2 <- x22[idx,,drop=FALSE]
+        yb1 <- y12[idx]
+        yb2 <- y22[idx]
+        rb <- r_X[idx]
+        
+        sum_k <- 0
+        # (i, j) where i < j
+        for (i in 1:(B_size-1)) {
+            for (j in (i+1):B_size) {
+                k_zz <- gaussian.kernel(xb1[i, ], xb1[j, ], h_x) * gaussian.kernel(yb1[i], yb1[j], h_y)
+                k_ww <- gaussian.kernel(xb2[i, ], xb2[j, ], h_x) * gaussian.kernel(yb2[i], yb2[j], h_y)
+                k_wz <- gaussian.kernel(xb2[i, ], xb1[j, ], h_x) * gaussian.kernel(yb2[i], yb1[j], h_y)
+                k_zw <- gaussian.kernel(xb1[i, ], xb2[j, ], h_x) * gaussian.kernel(yb1[i], yb2[j], h_y)
+                
+                sum_k <- sum_k + k_zz + rb[i]*rb[j]*k_ww - rb[i]*k_wz - rb[j]*k_zw
+                
+            }
+        }
+        n_pairs <- B_size*(B_size - 1) / 2
+        # n_pairs <- (B_size - 1) / 2
+        MMD_values[b] <- sum_k / n_pairs
+    }
+    
+    S_bar <- mean(MMD_values)
+    sigma_hat <- sqrt(var(MMD_values))
+    stat <- ifelse(sigma_hat >0, sqrt(S)*S_bar/sigma_hat, 0)
+    return(stat)
+}
+
+bootstrap_MMD <- function(x12, x22, y12, y22, h_x=1, h_y=1, r_X, B, seed=NULL){
+    if (!is.null(seed)) {
+        set.seed(seed)
+    }
+    
+    n <- length(y12)
+    stopifnot(length(y12) == length(y22))
+    
+    H_hat <- matrix(0, nrow=n, ncol=n)
+    for (i in 1:n){
+        for (j in 1:n) {
+            if (i != j) {
+                k_zz <- gaussian.kernel(x12[i,,drop=FALSE], x12[j,,drop=FALSE], 
+                                        h_x) * gaussian.kernel(y12[i], y12[j], h_y)
+                k_ww <- gaussian.kernel(x22[i,,drop=FALSE], x22[j,,drop=FALSE], 
+                                        h_x) * gaussian.kernel(y22[i], y22[j], h_y)
+                k_wz <- gaussian.kernel(x22[i,,drop=FALSE], x12[j,,drop=FALSE],
+                                        h_x) * gaussian.kernel(y22[i], y12[j], h_y)
+                k_zw <- gaussian.kernel(x12[i,,drop=FALSE], x22[j,,drop=FALSE],
+                                        h_x) * gaussian.kernel(y12[i], y22[j], h_y)
+                H_hat[i, j] <- k_zz + r_X[i]*r_X[j]*k_ww - r_X[i]*k_wz - r_X[j]*k_zw
+            }
+        }
+    }
+    obs_stat <- sum(H_hat) / (n*(n-1))
+    bootstrap_stats <- numeric(B)
+    
+    for (b in 1:B){
+        # Generate n i.i.d. Gaussian random variables
+        W <- rnorm(n)
+        
+        # Calculate the wild boostrap statistic
+        wild_bootstrap_sum <- sum(outer(W,W) * H_hat)
+        bootstrap_stats[b] <- wild_bootstrap_sum / (n*(n-1))
+    }
+    return(list(obs_stat=obs_stat, bootstrap_stats=bootstrap_stats))
 }
 
 estimate_r <- function(x11, x12, x21, x22, y11, y12, y21, y22, est.method="LL", seed=NULL){
@@ -347,6 +433,3 @@ apply_alg1 <- function(x1, x2, y1, y2, seed=NULL, epsilon=NULL){
   # cat("tilde_n1: ", tilde_n1, "tilde_n2: ", tilde_n2, "\n")
   return(list(tilde_n1=tilde_n1, tilde_n2=tilde_n2))
 }
-
-
-
