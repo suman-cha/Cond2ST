@@ -162,6 +162,7 @@ debiased_test <- function(x1, x2, y1, y2, alpha=0.05, est.method="LL", S=2, seed
   
   return(rejection)
 }
+
 # Hu and Lei (2024)
 CP_test <- function(x1, x2, y1, y2, prop=0.5, alpha=0.05, est.method="LL", seed=NULL){
   if (!is.null(seed)) {
@@ -184,73 +185,317 @@ CP_test <- function(x1, x2, y1, y2, prop=0.5, alpha=0.05, est.method="LL", seed=
   }
   return(rejection)
 }
-LinearMMD_test <- function(x1, x2, y1, y2, prop=0.5, alpha=0.05, bandwidth=1, est.method="LL", seed=NULL){
-  if (!is.null(seed)) {
-    set.seed(seed)
-  }
-  rejection <- 0
-  
-  # Assume equal sample size
-  stopifnot(length(y1) == length(y2))
-  total_sample_size <- length(y1)
-  n <- ceiling(total_sample_size * prop)
-  x11 <- x1[1:n, , drop=F]; x12 <- x1[-(1:n),,drop=F]
-  y11 <- y1[1:n]; y12 <- y1[-(1:n)]
-  x21 <- x2[1:n, , drop=F]; x22 <- x2[-(1:n),,drop=F]
-  y21 <- y2[1:n]; y22 <- y2[-(1:n)]
-  
-  # Estimate density ratio for x22 based on (x11, x21)
-  ratios <- estimate_r(x11, x12, x21, x22, y11, y12, y21, y22, est.method, seed)
-  r_X2 <- 1/ratios$g22.est
 
-  # Calculate Linear-time MMD statistics
-  MMDl_hat2 <- MMDl(x12, x22, y12, y22, h_x=bandwidth, h_y=bandwidth, r_X2, seed)
-  pvalue <- 1 - pnorm(MMDl_hat2)
-  
-  # Decision
-  if (pvalue < alpha){
-    rejection <- 1
-  }
-  return(rejection)
-}
-CV_LinearMMD_test <- function(x1, x2, y1, y2, prop=0.5, alpha=0.05, bandwidth=1, K=2, est.method="LL", seed=NULL) {
-  if (!is.null(seed)) {
-    set.seed(seed)
-  }
-  rejection <- 0
-  
-  # Assume equal sample size 
-  stopifnot(length(y1) == length(y2))
-  total_sample_size <- length(y1)
-  fold_size <- total_sample_size %/% K
-  n <- floor(total_sample_size * prop)
-  S_bar_values <- numeric(K)
-  
-  for (j in 1:K) {
-    start_idx <- (j - 1) * fold_size + 1
-    end_idx <- j * fold_size
+LinearMMD_test <- function(x1, x2, y1, y2, prop=0.5, alpha=0.05, bandwidths=c(1), 
+                           est.method="LL", seed=NULL) {
+    if (!is.null(seed)) {
+        set.seed(seed)
+    }
+    rejections <- numeric(length(bandwidths))
     
-    test_idx <- start_idx:end_idx
-    est_idx <- setdiff(1:total_sample_size, test_idx)
+    # Assume equal sample size
+    stopifnot(length(y1) == length(y2))
+    total_sample_size <- length(y1)
+    n <- ceiling(total_sample_size * prop)
+    x11 <- x1[1:n, , drop=F]; x12 <- x1[-(1:n),,drop=F]
+    y11 <- y1[1:n]; y12 <- y1[-(1:n)]
+    x21 <- x2[1:n, , drop=F]; x22 <- x2[-(1:n),,drop=F]
+    y21 <- y2[1:n]; y22 <- y2[-(1:n)]
     
-    x11 <- x1[est_idx, , drop = FALSE]; y11 <- y1[est_idx]
-    x12 <- x1[test_idx, , drop = FALSE]; y12 <- y1[test_idx]
-    x21 <- x2[est_idx, , drop = FALSE]; y21 <- y2[est_idx]
-    x22 <- x2[test_idx, , drop = FALSE]; y22 <- y2[test_idx]
-    
-    # Estimate density ratio for x22 based on (x11, x21)    
+    # Estimate density ratio once
     ratios <- estimate_r(x11, x12, x21, x22, y11, y12, y21, y22, est.method, seed)
     r_X2 <- 1/ratios$g22.est
     
-    S_bar_values[j] <- MMDl(x12, x22, y12, y22, h_x=bandwidth, h_y=bandwidth, r_X2, seed) * sqrt(n) / sqrt(floor(length(y12)/2))
-  }
-  
-  # Calculate Statistics
-  MMD_hat_cv <- sum(S_bar_values) / K
-  pvalue <- 1 - pnorm(MMD_hat_cv)
-  rejection <- if (pvalue < alpha) 1 else 0
-  return(rejection)
+    # Calculate for all bandwidths
+    for(i in seq_along(bandwidths)) {
+        bw <- bandwidths[i]
+        if(bw == "median") {
+            h_x <- median.bandwidth(x12, x22)
+            h_y <- median.bandwidth(matrix(y12), matrix(y22))
+        } else {
+            h_x <- as.numeric(bw)
+            h_y <- as.numeric(bw)
+        }
+        
+        MMDl_hat2 <- MMDl(x12, x22, y12, y22, h_x=h_x, h_y=h_y, r_X2, seed)
+        pvalue <- 1 - pnorm(MMDl_hat2)
+        rejections[i] <- as.integer(pvalue < alpha)
+    }
+    
+    return(rejections)
 }
+
+CV_LinearMMD_test <- function(x1, x2, y1, y2, prop=0.5, alpha=0.05, bandwidths=c(1), K=2, 
+                              est.method="LL", seed=NULL) {
+    if (!is.null(seed)) {
+        set.seed(seed)
+    }
+    rejections <- numeric(length(bandwidths))
+    
+    # Assume equal sample size 
+    stopifnot(length(y1) == length(y2))
+    total_sample_size <- length(y1)
+    fold_size <- total_sample_size %/% K
+    n <- floor(total_sample_size * prop)
+    S_bar_values <- matrix(0, nrow = K, ncol = length(bandwidths))
+    
+    for(j in 1:K) {
+        start_idx <- (j - 1) * fold_size + 1
+        end_idx <- j * fold_size
+        
+        test_idx <- start_idx:end_idx
+        est_idx <- setdiff(1:total_sample_size, test_idx)
+        
+        x11 <- x1[est_idx, , drop = FALSE]; y11 <- y1[est_idx]
+        x12 <- x1[test_idx, , drop = FALSE]; y12 <- y1[test_idx]
+        x21 <- x2[est_idx, , drop = FALSE]; y21 <- y2[est_idx]
+        x22 <- x2[test_idx, , drop = FALSE]; y22 <- y2[test_idx]
+        
+        # Estimate density ratio once per fold
+        ratios <- estimate_r(x11, x12, x21, x22, y11, y12, y21, y22, est.method, seed)
+        r_X2 <- 1/ratios$g22.est
+        
+        # Calculate for all bandwidths
+        for(bw_idx in seq_along(bandwidths)) {
+            bw <- bandwidths[bw_idx]
+            if(bw == "median") {
+                h_x <- median.bandwidth(x12, x22)
+                h_y <- median.bandwidth(matrix(y12), matrix(y22))
+            } else {
+                h_x <- as.numeric(bw)
+                h_y <- as.numeric(bw)
+            }
+            
+            S_bar_values[j, bw_idx] <- MMDl(x12, x22, y12, y22, h_x=h_x, h_y=h_y, r_X2, seed) * 
+                sqrt(n) / sqrt(floor(length(y12)/2))
+        }
+    }
+    
+    # Compute final results for each bandwidth
+    for(bw_idx in seq_along(bandwidths)) {
+        MMD_hat_cv <- sum(S_bar_values[, bw_idx]) / K
+        pvalue <- 1 - pnorm(MMD_hat_cv)
+        rejections[bw_idx] <- as.integer(pvalue < alpha)
+    }
+    
+    return(rejections)
+}
+
+BlockMMD_test <- function(x1, x2, y1, y2, B_size = NULL, prop=0.5, alpha=0.05, 
+                           bandwidths=c(1), est.method='LL', seed=NULL) {
+    if (!is.null(seed)) set.seed(seed)
+
+    # Assume equal sample size    
+    stopifnot(length(y1) == length(y2))
+    total_n <- length(y1)
+    
+    n <- ceiling(total_n * prop)
+    x11 <- x1[1:n,,drop=FALSE]; x12 <- x1[-(1:n),,drop=FALSE]
+    x21 <- x2[1:n,,drop=FALSE]; x22 <- x2[-(1:n),,drop=FALSE]
+    y11 <- y1[1:n]; y12 <- y1[-(1:n)]
+    y21 <- y2[1:n]; y22 <- y2[-(1:n)]
+    
+    # Estimate density ratio
+    ratios <- estimate_r(x11, x12, x21, x22, y11, y12, y21, y22, est.method, seed)
+    r_X2 <- 1/ratios$g22.est
+    
+    n_test <- length(y12)
+    if (is.null(B_size)) B_size <- floor(n_test^(0.5))
+    
+    num_blocks <- floor(n_test / B_size)
+    if (num_blocks < 2) {
+        warning("Test sample is too small for the given B_size, resulting in less than 2 blocks.")
+        return(rep(NA, length(bandwidths)))
+    }
+    
+    rejections <- numeric(length(bandwidths))
+    for (i in seq_along(bandwidths)) {
+        bw <- bandwidths[i]
+        
+        if (bw == "median") {
+            h_x <- median.bandwidth(x12, x22)
+            h_y <- median.bandwidth(matrix(y12), matrix(y22))
+        } else {
+            h_x <- as.numeric(bw)
+            h_y <- as.numeric(bw)
+        }
+        
+        # Compute the test statistic
+        test_stat <- MMDb(x12, x22, y12, y22, B_size,
+                          h_x=h_x, h_y=h_y, r_X=r_X2, seed=seed)
+        
+        pval <- 1 - pnorm(test_stat)
+        rejections[i] <- as.integer(pval < alpha)
+    }
+    return(rejections)
+}
+
+# CV_BlockMMD_test <- function(x1, x2, y1, y2, B_size = NULL, K = 2, alpha = 0.05,
+#                              bandwidths = c(1), est.method = "LL", seed = NULL) {
+#     if (!is.null(seed)) set.seed(seed)
+#     
+#     stopifnot(nrow(x1) == length(y1), nrow(x2) == length(y2))
+#     total_n <- length(y1)
+#     folds <- sample(rep(1:K, length.out = total_n))
+#     
+#     rejections <- numeric(length(bandwidths))
+#     fold_size <- floor(total_n / K)
+#     if (is.null(B_size)) B_size <- floor(fold_size^(0.5))
+#     
+#     for (i in seq_along(bandwidths)) {
+#         bw <- bandwidths[i]
+#         fold_stats <- numeric(K)
+#         
+#         for (j in 1:K) {
+#             test_idx <- which(folds == j)
+#             est_idx <- which(folds != j)
+#             
+#             x1_est <- x1[est_idx, , drop = FALSE]; y1_est <- y1[est_idx]
+#             x1_test <- x1[test_idx, , drop = FALSE]; y1_test <- y1[test_idx]
+#             x2_est <- x2[est_idx, , drop = FALSE]; y2_est <- y2[est_idx]
+#             x2_test <- x2[test_idx, , drop = FALSE]; y2_test <- y2[test_idx]
+#             
+#             n_test <- length(y1_test)
+#             S <- floor(n_test / B_size)
+#             if (S < 2) {
+#                 warning(paste("Fold", j, "has insufficient test data for >=2 blocks. Skipping."))
+#                 fold_stats[j] <- NA
+#                 next
+#             }
+#             
+#             ratios <- estimate_r(x1_est, x1_test, x2_est, x2_test,
+#                                  y1_est, y1_test, y2_est, y2_test,
+#                                  est.method = est.method, seed = seed + j)
+#             r_X <- 1 / ratios$g22.est
+# 
+#             if (bw == "median") {
+#                 h_x <- median.bandwidth(x1_test, x2_test)
+#                 h_y <- median.bandwidth(matrix(y1_test), matrix(y2_test))
+#             } else {
+#                 h_x <- as.numeric(bw)
+#                 h_y <- as.numeric(bw)
+#             }
+#             
+#             stat_j <- MMDb(x12 = x1_test, x22 = x2_test,
+#                            y12 = y1_test, y22 = y2_test,
+#                            B_size = B_size, h_x = h_x, h_y = h_y,
+#                            r_X = r_X, seed = seed + j)
+#             fold_stats[j] <- stat_j
+#         }
+#         
+#         final_stat <- mean(fold_stats, na.rm = TRUE)
+#         if (is.nan(final_stat)) final_stat <- 0
+#         pval <- 1 - pnorm(final_stat)
+#         rejections[i] <- as.integer(pval < alpha)
+#     }
+#     
+#     return(rejections)
+# }
+
+CV_BlockMMD_test <- function(x1, x2, y1, y2, B_size = NULL, K = 2, alpha = 0.05,
+                             bandwidths = c(1), est.method = "LL", seed = NULL) {
+    if (!is.null(seed)) set.seed(seed)
+    
+    stopifnot(nrow(x1) == length(y1), nrow(x2) == length(y2))
+    total_n <- length(y1)
+    folds <- sample(rep(1:K, length.out = total_n))
+    
+    rejections <- numeric(length(bandwidths))
+    fold_size <- floor(total_n / K)
+    if (is.null(B_size)) B_size <- floor(fold_size^(0.5))
+    
+    for (i in seq_along(bandwidths)) {
+        bw <- bandwidths[i]
+        all_block_values <- list()  # Store all block MMD values across folds
+        
+        for (j in 1:K) {
+            test_idx <- which(folds == j)
+            est_idx <- which(folds != j)
+            
+            x1_est <- x1[est_idx, , drop = FALSE]; y1_est <- y1[est_idx]
+            x1_test <- x1[test_idx, , drop = FALSE]; y1_test <- y1[test_idx]
+            x2_est <- x2[est_idx, , drop = FALSE]; y2_est <- y2[est_idx]
+            x2_test <- x2[test_idx, , drop = FALSE]; y2_test <- y2[test_idx]
+            
+            n_test <- length(y1_test)
+            S_fold <- floor(n_test / B_size)
+            if (S_fold < 1) {
+                warning(paste("Fold", j, "has insufficient test data for blocks. Skipping."))
+                next
+            }
+            
+            ratios <- estimate_r(x1_est, x1_test, x2_est, x2_test,
+                                 y1_est, y1_test, y2_est, y2_test,
+                                 est.method = est.method, seed = seed + j)
+            r_X <- 1 / ratios$g22.est
+            
+            if (bw == "median") {
+                h_x <- median.bandwidth(x1_test, x2_test)
+                h_y <- median.bandwidth(matrix(y1_test), matrix(y2_test))
+            } else {
+                h_x <- as.numeric(bw)
+                h_y <- as.numeric(bw)
+            }
+            
+            # Compute individual block MMD values for this fold
+            fold_block_values <- numeric(S_fold)
+            for (b in 1:S_fold) {
+                idx <- ((b-1)*B_size+1):(b*B_size)
+                if (max(idx) > n_test) {
+                    idx <- idx[idx <= n_test]  # Handle last block if incomplete
+                    if (length(idx) < 2) next  # Skip if too few samples
+                }
+                
+                xb1 <- x1_test[idx,,drop=FALSE]
+                xb2 <- x2_test[idx,,drop=FALSE]
+                yb1 <- y1_test[idx]
+                yb2 <- y2_test[idx]
+                rb <- r_X[idx]
+                
+                sum_k <- 0
+                B_actual <- length(idx)
+                for (ii in 1:(B_actual-1)) {
+                    for (jj in (ii+1):B_actual) {
+                        k_zz <- gaussian.kernel(xb1[ii, ], xb1[jj, ], h_x) * 
+                            gaussian.kernel(yb1[ii], yb1[jj], h_y)
+                        k_ww <- gaussian.kernel(xb2[ii, ], xb2[jj, ], h_x) * 
+                            gaussian.kernel(yb2[ii], yb2[jj], h_y)
+                        k_wz <- gaussian.kernel(xb2[ii, ], xb1[jj, ], h_x) * 
+                            gaussian.kernel(yb2[ii], yb1[jj], h_y)
+                        k_zw <- gaussian.kernel(xb1[ii, ], xb2[jj, ], h_x) * 
+                            gaussian.kernel(yb1[ii], yb2[jj], h_y)
+                        
+                        sum_k <- sum_k + k_zz + rb[ii]*rb[jj]*k_ww - rb[ii]*k_wz - rb[jj]*k_zw
+                    }
+                }
+                n_pairs <- B_actual * (B_actual - 1) / 2
+                if (n_pairs > 0) {
+                    fold_block_values[b] <- sum_k / n_pairs
+                }
+            }
+            
+            all_block_values[[j]] <- fold_block_values[fold_block_values != 0]
+        }
+        
+        # Combine all block MMD values from all folds
+        combined_blocks <- unlist(all_block_values)
+        if (length(combined_blocks) < 2) {
+            rejections[i] <- 0
+            next
+        }
+        
+        S_total <- length(combined_blocks)
+        S_bar <- mean(combined_blocks)
+        sigma_hat <- sqrt(var(combined_blocks))
+        final_stat <- ifelse(sigma_hat > 0, sqrt(S_total) * S_bar / sigma_hat, 0)
+        
+        pval <- 1 - pnorm(final_stat)
+        rejections[i] <- as.integer(pval < alpha)
+    }
+    
+    return(rejections)
+}
+
 CLF_test <- function(x1, x2, y1, y2, split.prop=0.5, est.prop=0.8, alpha=0.05, est.method="LL", seed=NULL) {
   if (!is.null(seed)) {
     set.seed(seed)
@@ -470,179 +715,230 @@ CLF_test2 <- function(x1, x2, y1, y2, prop = 0.5, alpha = 0.05, est.method = "LL
   return(rejection)
 }
 
+bootstrap_MMD_test <- function(x1, x2, y1, y2, B=1000, prop=0.8, alpha=0.05, bandwidths=c(1), est.method='LL', seed=NULL){
+    if(!is.null(seed)){
+        set.seed(seed)
+    }
+    
+    stopifnot(length(y1) == length(y2))
+    total_n <- length(y1)
+    
+    # Split the data 
+    n_est <- ceiling(total_n * prop) 
+    est_indices <- 1:n_est
+    test_indices <- (n_est+1):total_n
+    
+    x1_est <- x1[est_indices,,drop=FALSE]; x1_test <- x1[test_indices,,drop=FALSE]
+    x2_est <- x2[est_indices,,drop=FALSE]; x2_test <- x2[test_indices,,drop=FALSE]
+    y1_est <- y1[est_indices]; y1_test <- y1[test_indices]
+    y2_est <- y2[est_indices]; y2_test <- y2[test_indices]
+    
+    ratios <- estimate_r(x1_est, x1_test, x2_est, x2_test,
+                         y1_est, y1_test, y2_est, y2_test,
+                         est.method, seed)
+    r_X2 <- 1 / ratios$g22.est
+    
+    rejections <- numeric(length(bandwidths))
+    for (i in seq_along(bandwidths)){
+        bw <- bandwidths[i]
+        if (bw == 'median'){
+            h_x <- median.bandwidth(x1_test, x2_test)
+            h_y <- median.bandwidth(matrix(y1_test), matrix(y2_test))
+        } else {
+            h_x <- as.numeric(bw)
+            h_y <- as.numeric(bw)
+        }
+        
+        boot_results <- bootstrap_MMD(x1_test, x2_test, y1_test, y2_test,
+                                      h_x=h_x, h_y=h_y, r_X=r_X2, B=B, seed=seed) 
+        
+        obs_stat <- boot_results$obs_stat
+        bootstrap_stats <- boot_results$bootstrap_stats
+        
+        # Calculate the p-values as the proportion of bootstrap statistics
+        # that are greater than or equal to the observed statistic
+        p_value <- mean(bootstrap_stats >= obs_stat)
+        
+        rejections[i] <- as.integer(p_value < alpha) 
+    }
+    return(rejections)
+}
+
 
 # Conditional Independence Test (CIT)
 GCM_test <- function(x1, x2, y1, y2, alpha=0.05, epsilon=NULL, regr.method=ranger_reg_method, binary.regr.method = ranger_reg_method_binary, alg1=TRUE, seed=NULL){
-  if (!is.null(seed)) {
-    set.seed(seed)
-  }
-  rejection <- 0
-  n1 <- length(y1); n2 <- length(y2)
-  
-  if (alg1) {
-    alg1_res <- apply_alg1(x1, x2, y1, y2, seed, epsilon)
-    tilde_n1 <- alg1_res$tilde_n1
-    tilde_n2 <- alg1_res$tilde_n2
-    tilde_n <- tilde_n1 + tilde_n2
-    
-    if (tilde_n1 > n1 || tilde_n2 > n2) {
-      print("tilde_n1 > n1 || tilde_n2 > n2")
-      rejection <- 0
-      return(rejection)
-    } else {
-      x1_sample <- x1[sample(1:nrow(x1), tilde_n1, replace = FALSE), , drop = FALSE]
-      x2_sample <- x2[sample(1:nrow(x2), tilde_n2, replace = FALSE), , drop = FALSE]
-      y1_sample <- y1[sample(1:length(y1), tilde_n1, replace = FALSE)]
-      y2_sample <- y2[sample(1:length(y2), tilde_n2, replace = FALSE)]
-      X_merged <- rbind(x1_sample, x2_sample)
-      Y_merged <- c(y1_sample, y2_sample)
-      Z_merged <- c(rep(0, tilde_n1), rep(1, tilde_n2))
-      
-      merged_indices <- sample(1:tilde_n, size = tilde_n, replace = FALSE)
-      X_merged <- X_merged[merged_indices, , drop = FALSE]
-      Y_merged <- Y_merged[merged_indices]
-      Z_merged <- Z_merged[merged_indices]
-      gcm.pvalue <- gcm_test_binary(X=Y_merged, Y=Z_merged, Z=X_merged, reg_method=regr.method, binary_reg_method = binary.regr.method, seed=seed)
+    if (!is.null(seed)) {
+        set.seed(seed)
     }
-  } else{
-    X <- rbind(x1, x2)
-    Y <- c(y1, y2)
-    Z <- c(rep(0, n1), rep(1, n2))
-    gcm.pvalue <- gcm_test_binary(X=Y, Y=Z, Z=X, reg_method=regr.method, binary_reg_method = binary.regr.method, seed=seed)
-  }
-  
-  rejection <- ifelse(gcm.pvalue < alpha, 1, 0)
-  return(rejection)
+    rejection <- 0
+    n1 <- length(y1); n2 <- length(y2)
+    
+    if (alg1) {
+        alg1_res <- apply_alg1(x1, x2, y1, y2, seed, epsilon)
+        tilde_n1 <- alg1_res$tilde_n1
+        tilde_n2 <- alg1_res$tilde_n2
+        tilde_n <- tilde_n1 + tilde_n2
+        
+        if (tilde_n1 > n1 || tilde_n2 > n2) {
+            print("tilde_n1 > n1 || tilde_n2 > n2")
+            rejection <- 0
+            return(rejection)
+        } else {
+            x1_sample <- x1[sample(1:nrow(x1), tilde_n1, replace = FALSE), , drop = FALSE]
+            x2_sample <- x2[sample(1:nrow(x2), tilde_n2, replace = FALSE), , drop = FALSE]
+            y1_sample <- y1[sample(1:length(y1), tilde_n1, replace = FALSE)]
+            y2_sample <- y2[sample(1:length(y2), tilde_n2, replace = FALSE)]
+            X_merged <- rbind(x1_sample, x2_sample)
+            Y_merged <- c(y1_sample, y2_sample)
+            Z_merged <- c(rep(0, tilde_n1), rep(1, tilde_n2))
+            
+            merged_indices <- sample(1:tilde_n, size = tilde_n, replace = FALSE)
+            X_merged <- X_merged[merged_indices, , drop = FALSE]
+            Y_merged <- Y_merged[merged_indices]
+            Z_merged <- Z_merged[merged_indices]
+            gcm.pvalue <- gcm_test_binary(X=Y_merged, Y=Z_merged, Z=X_merged, reg_method=regr.method, binary_reg_method = binary.regr.method, seed=seed)
+        }
+    } else{
+        X <- rbind(x1, x2)
+        Y <- c(y1, y2)
+        Z <- c(rep(0, n1), rep(1, n2))
+        gcm.pvalue <- gcm_test_binary(X=Y, Y=Z, Z=X, reg_method=regr.method, binary_reg_method = binary.regr.method, seed=seed)
+    }
+    
+    rejection <- ifelse(gcm.pvalue < alpha, 1, 0)
+    return(rejection)
 }
 PCM_test <- function(x1, x2, y1, y2, alpha = 0.05, epsilon = NULL, regr.method = ranger_reg_method, binary.regr.method = ranger_reg_method_binary, alg1 = TRUE, seed=NULL) {
-  if (!is.null(seed)) {
-    set.seed(seed)
-  }
-  rejection <- 0
-  n1 <- length(y1); n2 <- length(y2)
-  
-  if (alg1) {
-    alg1_res <- apply_alg1(x1, x2, y1, y2, seed, epsilon)
-    tilde_n1 <- alg1_res$tilde_n1
-    tilde_n2 <- alg1_res$tilde_n2
-    # tilde_n1 <- min(tilde_n1, tilde_n2)
-    # tilde_n2 <- tilde_n1
-    tilde_n <- tilde_n1 + tilde_n2
-    
-    if (tilde_n1 > n1 || tilde_n2 > n2) {
-      rejection <- 0
-      print("tilde_n1 > n1 || tilde_n2 > n2")
-      return(rejection)
-    } else {
-      x1_sample <- x1[sample(1:nrow(x1), tilde_n1, replace = FALSE), , drop = FALSE]
-      x2_sample <- x2[sample(1:nrow(x2), tilde_n2, replace = FALSE), , drop = FALSE]
-      y1_sample <- y1[sample(1:length(y1), tilde_n1, replace = FALSE)]
-      y2_sample <- y2[sample(1:length(y2), tilde_n2, replace = FALSE)]
-      X_merged <- rbind(x1_sample, x2_sample)
-      Y_merged <- c(y1_sample, y2_sample)
-      Z_merged <- c(rep(0, tilde_n1), rep(1, tilde_n2))
-      
-      merged_indices <- sample(1:tilde_n, size = tilde_n, replace = FALSE)
-      X_merged <- X_merged[merged_indices, , drop = FALSE]
-      Y_merged <- Y_merged[merged_indices]
-      Z_merged <- Z_merged[merged_indices]
-      pcm.pvalue <- pcm_test_binary(X = Y_merged, Y = Z_merged, Z = X_merged, reg_method = regr.method, binary_reg_method = binary.regr.method, seed=seed)
+    if (!is.null(seed)) {
+        set.seed(seed)
     }
-  } else {
-    X <- rbind(x1, x2)
-    Y <- c(y1, y2)
-    Z <- c(rep(0, n1), rep(1, n2))
-    pcm.pvalue <- pcm_test_binary(X = Y, Y = Z, Z = X, reg_method = regr.method, binary_reg_method = binary.regr.method, seed=seed)
-  }
-  
-  rejection <- ifelse(pcm.pvalue < alpha, 1, 0)
-  return(rejection)
+    rejection <- 0
+    n1 <- length(y1); n2 <- length(y2)
+    
+    if (alg1) {
+        alg1_res <- apply_alg1(x1, x2, y1, y2, seed, epsilon)
+        tilde_n1 <- alg1_res$tilde_n1
+        tilde_n2 <- alg1_res$tilde_n2
+        # tilde_n1 <- min(tilde_n1, tilde_n2)
+        # tilde_n2 <- tilde_n1
+        tilde_n <- tilde_n1 + tilde_n2
+        
+        if (tilde_n1 > n1 || tilde_n2 > n2) {
+            rejection <- 0
+            print("tilde_n1 > n1 || tilde_n2 > n2")
+            return(rejection)
+        } else {
+            idx1 <- sample.int(nrow(x1), tilde_n1)              
+            x1_sample <- x1[idx1, , drop = FALSE]
+            y1_sample <- y1[idx1]
+            idx2 <- sample.int(nrow(x2), tilde_n2)
+            x2_sample <- x2[idx2, , drop = FALSE]
+            y2_sample <- y2[idx2]
+            X_merged <- rbind(x1_sample, x2_sample)
+            Y_merged <- c(y1_sample, y2_sample)
+            Z_merged <- c(rep(0, tilde_n1), rep(1, tilde_n2))
+            
+            merged_indices <- sample(1:tilde_n, size = tilde_n, replace = FALSE)
+            X_merged <- X_merged[merged_indices, , drop = FALSE]
+            Y_merged <- Y_merged[merged_indices]
+            Z_merged <- Z_merged[merged_indices]
+            pcm.pvalue <- pcm_test_binary(Y = Z_merged, X = Y_merged, Z = X_merged, reg_method = regr.method, binary_reg_method = binary.regr.method, seed=seed)
+        }
+    } else {
+        X <- rbind(x1, x2)
+        Y <- c(y1, y2)
+        Z <- c(rep(0, n1), rep(1, n2))
+        pcm.pvalue <- pcm_test_binary(X = Y, Y = Z, Z = X, reg_method = regr.method, binary_reg_method = binary.regr.method, seed=seed)
+    }
+    
+    rejection <- ifelse(pcm.pvalue < alpha, 1, 0)
+    return(rejection)
 }
 WGSC_test <- function(x1, x2, y1, y2, alpha=0.05, epsilon=NULL, regr.method=xgboost_reg_method, binary.regr.method = xgboost_reg_method_binary, alg1=TRUE, seed=NULL){
-  if (!is.null(seed)) {
-    set.seed(seed)
-  }
-  rejection <- 0
-  n1 <- length(y1); n2 <- length(y2)
-  
-  if (alg1) {
-    alg1_res <- apply_alg1(x1, x2, y1, y2, seed, epsilon)
-    tilde_n1 <- alg1_res$tilde_n1
-    tilde_n2 <- alg1_res$tilde_n2
-    tilde_n <- tilde_n1 + tilde_n2
-    
-    if (tilde_n1 > n1 || tilde_n2 > n2) {
-      print("tilde_n1 > n1 || tilde_n2 > n2")
-      rejection <- 0
-      return(rejection)
-    } else {
-      x1_sample <- x1[sample(1:nrow(x1), tilde_n1, replace = FALSE), , drop = FALSE]
-      x2_sample <- x2[sample(1:nrow(x2), tilde_n2, replace = FALSE), , drop = FALSE]
-      y1_sample <- y1[sample(1:length(y1), tilde_n1, replace = FALSE)]
-      y2_sample <- y2[sample(1:length(y2), tilde_n2, replace = FALSE)]
-      X_merged <- rbind(x1_sample, x2_sample)
-      Y_merged <- c(y1_sample, y2_sample)
-      Z_merged <- c(rep(0, tilde_n1), rep(1, tilde_n2))
-      
-      merged_indices <- sample(1:tilde_n, size = tilde_n, replace = FALSE)
-      X_merged <- X_merged[merged_indices, , drop = FALSE]
-      Y_merged <- Y_merged[merged_indices]
-      Z_merged <- Z_merged[merged_indices]
-      wgsc.pvalue <- wgsc_binary(Y=Z_merged, X=Y_merged, Z=X_merged, reg_method=regr.method, binary_reg_method = binary.regr.method, seed=seed)
+    if (!is.null(seed)) {
+        set.seed(seed)
     }
-  } else{
-    X <- rbind(x1, x2)
-    Y <- c(y1, y2)
-    Z <- c(rep(0, n1), rep(1, n2))
-    wgsc.pvalue <- wgsc_binary(Y=Z, X=Y, Z=X, reg_method=regr.method, binary_reg_method = binary.regr.method, seed=seed)
-  }
-  if (wgsc.pvalue < alpha){
-    rejection <- 1
-  }
-  return(rejection)
+    rejection <- 0
+    n1 <- length(y1); n2 <- length(y2)
+    
+    if (alg1) {
+        alg1_res <- apply_alg1(x1, x2, y1, y2, seed, epsilon)
+        tilde_n1 <- alg1_res$tilde_n1
+        tilde_n2 <- alg1_res$tilde_n2
+        tilde_n <- tilde_n1 + tilde_n2
+        
+        if (tilde_n1 > n1 || tilde_n2 > n2) {
+            print("tilde_n1 > n1 || tilde_n2 > n2")
+            rejection <- 0
+            return(rejection)
+        } else {
+            x1_sample <- x1[sample(1:nrow(x1), tilde_n1, replace = FALSE), , drop = FALSE]
+            x2_sample <- x2[sample(1:nrow(x2), tilde_n2, replace = FALSE), , drop = FALSE]
+            y1_sample <- y1[sample(1:length(y1), tilde_n1, replace = FALSE)]
+            y2_sample <- y2[sample(1:length(y2), tilde_n2, replace = FALSE)]
+            X_merged <- rbind(x1_sample, x2_sample)
+            Y_merged <- c(y1_sample, y2_sample)
+            Z_merged <- c(rep(0, tilde_n1), rep(1, tilde_n2))
+            
+            merged_indices <- sample(1:tilde_n, size = tilde_n, replace = FALSE)
+            X_merged <- X_merged[merged_indices, , drop = FALSE]
+            Y_merged <- Y_merged[merged_indices]
+            Z_merged <- Z_merged[merged_indices]
+            wgsc.pvalue <- wgsc_binary(Y=Z_merged, X=Y_merged, Z=X_merged, reg_method=regr.method, binary_reg_method = binary.regr.method, seed=seed)
+        }
+    } else{
+        X <- rbind(x1, x2)
+        Y <- c(y1, y2)
+        Z <- c(rep(0, n1), rep(1, n2))
+        wgsc.pvalue <- wgsc_binary(Y=Z, X=Y, Z=X, reg_method=regr.method, binary_reg_method = binary.regr.method, seed=seed)
+    }
+    if (wgsc.pvalue < alpha){
+        rejection <- 1
+    }
+    return(rejection)
 }
 RCIT_test <- function(x1, x2, y1, y2, alpha=0.05, epsilon=NULL, alg1=TRUE, seed=NULL, ...) {
-  if (!is.null(seed)) {
-    set.seed(seed)
-  }
-  rejection <- 0
-  n1 <- length(y1); n2 <- length(y2)
-  
-  if (alg1 == TRUE) {
-    alg1_res <- apply_alg1(x1, x2, y1, y2, seed, epsilon)
-    tilde_n1 <- alg1_res$tilde_n1
-    tilde_n2 <- alg1_res$tilde_n2
-    # tilde_n1 <- min(tilde_n1, tilde_n2)
-    # tilde_n2 <- tilde_n1
-    tilde_n <- tilde_n1 + tilde_n2
-    if (tilde_n1 > n1 || tilde_n2 > n2) {
-      print("tilde_n1 > n1 || tilde_n2 > n2")
-      rejection <- 0
-      return(rejection)
-    } else {
-      x1_sample <- x1[sample(1:nrow(x1), tilde_n1, replace = FALSE), , drop = FALSE]
-      x2_sample <- x2[sample(1:nrow(x2), tilde_n2, replace = FALSE), , drop = FALSE]
-      y1_sample <- y1[sample(1:length(y1), tilde_n1, replace = FALSE)]
-      y2_sample <- y2[sample(1:length(y2), tilde_n2, replace = FALSE)]
-      X_merged <- rbind(x1_sample, x2_sample)
-      Y_merged <- c(y1_sample, y2_sample)
-      Z_merged <- c(rep(0, tilde_n1), rep(1, tilde_n2))
-      
-      merged_indices <- sample(1:tilde_n, size=tilde_n, replace = FALSE)
-      X_merged <- X_merged[merged_indices, , drop = FALSE]
-      Y_merged <- Y_merged[merged_indices]
-      Z_merged <- Z_merged[merged_indices]
-      rcit.pvalue <- RCIT(x=Y_merged, y=Z_merged, z=X_merged, approx = "lpd4", num_f = 100, num_f2 = 5, seed=seed)$p
+    if (!is.null(seed)) {
+        set.seed(seed)
     }
-  } else {  
-    X <- rbind(x1, x2)
-    Y <- c(y1, y2)
-    Z <- c(rep(0, n1), rep(1, n2))
-    rcit.pvalue <- RCIT(x=Y, y=Z, z=X, approx = "lpd4", num_f = 100, num_f2 = 5, seed=seed)$p
-  }
-  
-  rejection <- ifelse(rcit.pvalue < alpha, 1, 0)
-  return(rejection)
+    rejection <- 0
+    n1 <- length(y1); n2 <- length(y2)
+    
+    if (alg1 == TRUE) {
+        alg1_res <- apply_alg1(x1, x2, y1, y2, seed, epsilon)
+        tilde_n1 <- alg1_res$tilde_n1
+        tilde_n2 <- alg1_res$tilde_n2
+        # tilde_n1 <- min(tilde_n1, tilde_n2)
+        # tilde_n2 <- tilde_n1
+        tilde_n <- tilde_n1 + tilde_n2
+        if (tilde_n1 > n1 || tilde_n2 > n2) {
+            print("tilde_n1 > n1 || tilde_n2 > n2")
+            rejection <- 0
+            return(rejection)
+        } else {
+            x1_sample <- x1[sample(1:nrow(x1), tilde_n1, replace = FALSE), , drop = FALSE]
+            x2_sample <- x2[sample(1:nrow(x2), tilde_n2, replace = FALSE), , drop = FALSE]
+            y1_sample <- y1[sample(1:length(y1), tilde_n1, replace = FALSE)]
+            y2_sample <- y2[sample(1:length(y2), tilde_n2, replace = FALSE)]
+            X_merged <- rbind(x1_sample, x2_sample)
+            Y_merged <- c(y1_sample, y2_sample)
+            Z_merged <- c(rep(0, tilde_n1), rep(1, tilde_n2))
+            
+            merged_indices <- sample(1:tilde_n, size=tilde_n, replace = FALSE)
+            X_merged <- X_merged[merged_indices, , drop = FALSE]
+            Y_merged <- Y_merged[merged_indices]
+            Z_merged <- Z_merged[merged_indices]
+            rcit.pvalue <- RCIT(x=Y_merged, y=Z_merged, z=X_merged, approx = "lpd4", num_f = 100, num_f2 = 5, seed=seed)$p
+        }
+    } else {  
+        X <- rbind(x1, x2)
+        Y <- c(y1, y2)
+        Z <- c(rep(0, n1), rep(1, n2))
+        rcit.pvalue <- RCIT(x=Y, y=Z, z=X, approx = "lpd4", num_f = 100, num_f2 = 5, seed=seed)$p
+    }
+    
+    rejection <- ifelse(rcit.pvalue < alpha, 1, 0)
+    return(rejection)
 }
 
 
