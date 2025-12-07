@@ -59,6 +59,8 @@ generate_y <- function(x, rho=10, is_null=TRUE) {
 drt_test_functions <- list(
   LinearMMD_test = LinearMMD_test,
   CV_LinearMMD_test = CV_LinearMMD_test,
+  BlockMMD_test = BlockMMD_test,
+  bootstrap_MMD_test = bootstrap_MMD_test,
   CLF_test = CLF_test,
   CV_CLF_test = CV_CLF_test,
   CP_test = CP_test,
@@ -69,7 +71,8 @@ cit_test_functions <- list(
   RCIT_test = RCIT_test,
   PCM_test = PCM_test,
   GCM_test = GCM_test,
-  WGSC_test = WGSC_test
+  WGSC_test = WGSC_test,
+  KCI_test = KCI_test
 )
 
 # Parameters
