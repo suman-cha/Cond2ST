@@ -343,7 +343,7 @@ p <- 5
 delta_values <- c(0, 0.25, 0.5, 0.75)  # 0 = null, >0 = alternatives
 epsilon_types <- c("1/n", "1/sqrt(log(n))", "1/log(n)", "1/sqrt(n)")  # From paper appendix
 n_sims <- 500
-cit_methods <- c("GCM", "PCM", "RCIT", "WGSC")
+cit_methods <- c("GCM", "PCM", "RCIT")
 reg_methods <- c("linear", "ranger", "xgboost")
 
 results_list <- list()
