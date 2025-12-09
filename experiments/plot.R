@@ -22,8 +22,8 @@ load_and_prepare_data <- function(file_path, scenario) {
   return(data)
 }
 
-c2st_methods <- c("LinearMMD_test", "CV_LinearMMD_test", "BlockMMD_test", "CV_BlockMMD_test", "bootstrap_MMD_test", "CLF_test", "CV_CLF_test", "CP_test", "debiased_test")
-cit_methods <- c("RCIT_test", "GCM_test", "PCM_test", "WGSC_test")
+c2st_methods <- c("debiased_test", "CP_test", "CV_CLF_test", "CLF_test", "bootstrap_MMD_test", "CV_BlockMMD_test", "BlockMMD_test", "CV_LinearMMD_test", "LinearMMD_test")
+cit_methods <- c("WGSC_test", "PCM_test", "GCM_test", "RCIT_test")
 method_labels <- c(
   "LinearMMD_test" = "MMD-\u2113",
   "CV_LinearMMD_test" = "$^\\dagger$MMD-\u2113",
