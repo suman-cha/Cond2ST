@@ -38,9 +38,9 @@ drt_test_functions <- list(
 cit_test_functions <- list(
   RCIT_test = RCIT_test,
   PCM_test = PCM_test,
-  GCM_test = GCM_test,
-  WGSC_test = WGSC_test,
-  KCI_test = KCI_test
+  GCM_test = GCM_test
+  # WGSC_test = WGSC_test,
+  # KCI_test = KCI_test
 )
 
 # Parameters

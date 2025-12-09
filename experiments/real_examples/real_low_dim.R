@@ -81,9 +81,9 @@ drt_test_functions <- list(
 cit_test_functions <- list(
   RCIT_test = RCIT_test,
   GCM_test = GCM_test,
-  WGSC_test = WGSC_test,
-  PCM_test = PCM_test,
-  KCI_test = KCI_test
+  # WGSC_test = WGSC_test,
+  PCM_test = PCM_test
+  # KCI_test = KCI_test
 )
 
 n_values <- c(200, 400, 800, 1200, 1600, 2000)
