@@ -17,38 +17,40 @@ load_and_prepare_data <- function(file_path, scenario) {
   
   data$Scenario <- scenario_name
   data$test_name <- factor(data$test_name, levels = unique(data$test_name))
-  data$extra_param <- factor(data$extra_param, levels = unique(data$extra_param))
   data$h_label <- factor(data$h_label, levels = c("Null", "Alternative"))
   
   return(data)
 }
 
-c2st_methods <- c("debiased_test", "CP_test" , "CVCLF_test", "CLF_test", "CVLinearMMD_test", "LinearMMD_test")
-cit_methods <- c("WGSC_test",  "GCM_test", "PCM_test", "RCoT_test", "RCIT_test")
+c2st_methods <- c("LinearMMD_test", "CV_LinearMMD_test", "BlockMMD_test", "CV_BlockMMD_test", "bootstrap_MMD_test", "CLF_test", "CV_CLF_test", "CP_test", "debiased_test")
+cit_methods <- c("RCIT_test", "GCM_test", "PCM_test", "WGSC_test")
 method_labels <- c(
+  "LinearMMD_test" = "MMD-\u2113",
+  "CV_LinearMMD_test" = "$^\\dagger$MMD-\u2113",
+  "BlockMMD_test" = "BlockMMD",
+  "CV_BlockMMD_test" = "$^\\dagger$BlockMMD",
+  "bootstrap_MMD_test" = "BootMMD",
+  "CLF_test" = "CLF",
+  "CV_CLF_test" = "$^\\dagger$CLF",
   "CP_test" = "CP",
   "debiased_test" = "DCP",
-  "CVLinearMMD_test" = "$^\\dagger$MMD-\u2113",
-  "LinearMMD_test" = "MMD-\u2113",
-  "CVCLF_test" = "$^\\dagger$CLF",
-  "CLF_test" = "CLF",
+  "RCIT_test" = "RCIT",
   "GCM_test" = "GCM",
   "PCM_test" = "PCM",
-  "WGSC_test" = "WGSC",
-  "RCIT_test" = "RCIT",
-  "RCoT_test" = "RCoT"
+  "WGSC_test" = "WGSC"
 )
 
 # Function to filter and prepare data
 prepare_data <- function(data) {
-  data_c2st <- data %>%
-    filter(test_type == "C2ST" & extra_param == "LL" & test_name %in% c2st_methods)
+  data_drt <- data %>%
+    filter(test_type == "DRT" & test_name %in% c2st_methods)
   data_cit <- data %>%
-    filter(test_type == "CIT" & extra_param == "TRUE" & test_name %in% cit_methods)
+    filter(test_type == "CIT" & test_name %in% cit_methods)
   
-  data_filtered <- rbind(data_c2st, data_cit)
+  data_filtered <- rbind(data_drt, data_cit)
   data_filtered$Method <- data_filtered$test_name
   data_filtered$Method <- factor(data_filtered$Method, levels = c(c2st_methods, cit_methods))
+  data_filtered$test_type <- factor(data_filtered$test_type, levels = c("DRT", "CIT"))
   
   return(data_filtered)
 }
@@ -66,13 +68,13 @@ generate_plot_combined <- function(data, scenario_name) {
   
   data$Method <- factor(data$Method, levels = c(c2st_methods, cit_methods))
   
-  ggplot(data, aes(x = factor(n), y = Method, fill = mean_result)) +
+  ggplot(data, aes(x = factor(n), y = Method, fill = rejection_rate)) +
     geom_tile(color = "white", size = 0.5) +
     scale_fill_gradientn(colors = c("lightyellow", "orange", "red"), 
                          values = scales::rescale(c(0, 0.5, 1)),
                          limits = c(0, 1),
                          name = "Rejection \n     rate") +
-    geom_text(aes(label = sprintf("%.3f", mean_result)), color = "black", size = 12.6, family = "serif") +  
+    geom_text(aes(label = sprintf("%.3f", rejection_rate)), color = "black", size = 12.6, family = "serif") +  
     facet_grid(test_type ~ Scenario_Hypothesis, scales = "free_y", space = "free") +
     labs(
       title = paste("Rejection Rate for Scenario", scenario_name),
@@ -103,7 +105,7 @@ generate_plot_combined <- function(data, scenario_name) {
 }
 
 
-for (scenario_number in 1:3) {
+for (scenario_number in 1:5) {
   file_path_U <- paste0("results/simulation_results_S", scenario_number, "U.csv")
   file_path_B <- paste0("results/simulation_results_S", scenario_number, "B.csv")
   save_dir <- "Figures"
