@@ -30,14 +30,14 @@ beta <- c(1, -1, 1, -1, rep(0, max(0, d - 4)))
 
 # For Scenario 4U (unbounded r): choose df with different tail indices.
 #   df1 smaller (heavier tail) than df2  => r(x) = f1/f2 grows unbounded in the tails.
-df_U_g1 <- 3  
-df_U_g2 <- 4 
+df_U_g1 <- 4  
+df_U_g2 <- 4
 
 # For Scenario 4B (bounded r): truncate to a compact set; df can be any >=3.
 df_B_g1 <- 3
 df_B_g2 <- 4
 # Truncation radius for each coordinate (compact cube [-R, R]^d):
-R_trunc <- 1
+R_trunc <- 0.5
 
 # -------------------------- Samplers for X ----------------------------------
 # Unbounded case: independent Student t per coordinate, different dfs per group.
@@ -105,8 +105,8 @@ drt_test_functions <- list(
 cit_test_functions <- list(
     RCIT_test = RCIT_test,
     PCM_test  = PCM_test,
-    GCM_test  = GCM_test
-    # WGSC_test = WGSC_test,
+    GCM_test  = GCM_test,
+    WGSC_test = WGSC_test
     # KCI_test  = KCI_test
 )
 
