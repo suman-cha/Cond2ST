@@ -27,9 +27,9 @@ cit_methods <- c("WGSC_test", "PCM_test", "GCM_test", "RCIT_test")
 method_labels <- c(
   "LinearMMD_test" = "MMD-\u2113",
   "CV_LinearMMD_test" = "$^\\dagger$MMD-\u2113",
-  "BlockMMD_test" = "BlockMMD",
-  "CV_BlockMMD_test" = "$^\\dagger$BlockMMD",
-  "bootstrap_MMD_test" = "BootMMD",
+  "BlockMMD_test" = "MMD-b",
+  "CV_BlockMMD_test" = "$^\\dagger$MMD-b",
+  "bootstrap_MMD_test" = "MMD-wb",
   "CLF_test" = "CLF",
   "CV_CLF_test" = "$^\\dagger$CLF",
   "CP_test" = "CP",
@@ -93,7 +93,7 @@ generate_plot_combined <- function(data, scenario_name) {
       panel.border = element_rect(color = "black", fill = NA, size = 2.4), 
       plot.margin = margin(t = 24, r = 24, b = 24, l = 24),  
       legend.position = "right",
-      legend.key.height = unit(6, "cm"), 
+      legend.key.height = unit(9, "cm"), 
       legend.title = element_text(size = 36, margin = margin(b = 30)),  
       legend.text = element_text(size = 32.4), 
       axis.title.x = element_text(size = 48, face = "bold", margin = margin(t = 36, b = 12)),  
@@ -106,9 +106,9 @@ generate_plot_combined <- function(data, scenario_name) {
 
 
 for (scenario_number in 1:5) {
-  file_path_U <- paste0("results/simulation_results_S", scenario_number, "U.csv")
-  file_path_B <- paste0("results/simulation_results_S", scenario_number, "B.csv")
-  save_dir <- "Figures"
+  file_path_U <- paste0("results/simulation/simulation_results_S", scenario_number, "U.csv")
+  file_path_B <- paste0("results/simulation/simulation_results_S", scenario_number, "B.csv")
+  save_dir <- "figures"
   
   if (!dir.exists(save_dir)) {
     dir.create(save_dir)

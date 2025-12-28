@@ -31,8 +31,8 @@ cit_test_functions <- list(
 )
 
 # Parameters
-n_base <- 200  # Base sample size for smaller group
-imbalance_ratios <- c(5, 10, 50, 100)  # Ratio of larger group to smaller group
+n_base <- 50  # Base sample size for smaller group
+imbalance_ratios <- c(1, 2, 3, 4)  # Ratio of larger group to smaller group
 n_sims <- 500
 alpha <- 0.05
 d <- 10
@@ -47,35 +47,46 @@ for (ratio in imbalance_ratios) {
     h_label <- if (is_null) "Null" else "Alternative"
     
     for (test_name in names(cit_test_functions)) {
-      # Run the simulations
-      result <- pbapply::pbsapply(1:n_sims, function(sim) {
-        seed <- 1203 + sim
-        set.seed(seed)
+      for (alg1_flag in c(TRUE, FALSE)) {
+        alg1_label <- if (alg1_flag) "with_alg1" else "without_alg1"
         
-        # Generate data for Group 1 (smaller group) and Group 2 (larger group)
-        x1 <- generate_data(n1, d, group = 1)
-        y1 <- generate_y(x1, is_null = TRUE)
-        set.seed(seed + n_sims)
-        x2 <- generate_data(n2, d, group = 2)
-        y2 <- generate_y(x2, is_null = is_null)
+        # Run the simulations
+        result <- pbapply::pbsapply(1:n_sims, function(sim) {
+          seed <- 1203 + sim
+          set.seed(seed)
+          
+          # Generate data for Group 1 (smaller group) and Group 2 (larger group)
+          x1 <- generate_data(n1, d, group = 1)
+          y1 <- generate_y(x1, is_null = TRUE)
+          set.seed(seed + n_sims)
+          x2 <- generate_data(n2, d, group = 2)
+          y2 <- generate_y(x2, is_null = is_null)
+          
+          test_args <- list(x1, x2, y1, y2, seed = seed, alg1 = alg1_flag)
+          
+          # For PCM_test and GCM_test, add regression methods
+          if (test_name %in% c("PCM_test", "GCM_test")) {
+            test_args$regr.method <- ranger_reg_method
+            test_args$binary.regr.method <- ranger_reg_method_binary
+          }
+          
+          do.call(cit_test_functions[[test_name]], test_args)
+        }, simplify = "array")
         
-        test_args <- list(x1, x2, y1, y2, seed = seed)
+        mean_result <- mean(result)
+        results_list[[length(results_list) + 1]] <- data.table(
+          test_name = test_name,
+          n1 = n1,
+          n2 = n2,
+          imbalance_ratio = ratio,
+          alg1 = alg1_label,
+          h_label = h_label,
+          rejection_rate = mean_result
+        )
         
-        do.call(cit_test_functions[[test_name]], test_args)
-      }, simplify = "array")
-      
-      mean_result <- mean(result)
-      results_list[[length(results_list) + 1]] <- data.table(
-        test_name = test_name,
-        n1 = n1,
-        n2 = n2,
-        imbalance_ratio = ratio,
-        h_label = h_label,
-        rejection_rate = mean_result
-      )
-      
-      # Print results
-      cat("[Test]", test_name, "| Ratio:", ratio, "| n1:", n1, "| n2:", n2, "|", h_label, "| Rejection Rate:", mean_result, "\n", strrep("-", 80), "\n")
+        # Print results
+        cat("[Test]", test_name, "| Ratio:", ratio, "| n1:", n1, "| n2:", n2, "|", alg1_label, "|", h_label, "| Rejection Rate:", mean_result, "\n", strrep("-", 80), "\n")
+      }
     }
   }
 }
@@ -87,4 +98,3 @@ results_dt <- rbindlist(results_list)
 filename <- paste0("results/simulation_results_", tag, ".csv")
 fwrite(results_dt, filename, row.names = FALSE)
 cat("Results saved to", filename, "\n")
-
