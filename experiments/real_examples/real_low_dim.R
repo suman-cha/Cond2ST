@@ -101,7 +101,7 @@ for (n in n_values) {
       for (test_name in names(test_functions)) {
         if (test_type == "DRT") {
           for (est in estimators) {
-            result <- pbapply::pbsapply(1:n_sims, function(sim) {
+            result_list <- pbapply::pblapply(1:n_sims, function(sim) {
               seed <- 1203 + sim
               set.seed(seed)
               
@@ -111,23 +111,41 @@ for (n in n_values) {
               d2 <- sample_data(X_norm, Y_norm, n, is_null, FALSE)
               
               test_args <- list(d1$x, d2$x, d1$y, d2$y, est.method = est, seed = seed)
-              do.call(test_functions[[test_name]], test_args)
+              
+              # Measure execution time and get result
+              time_result <- system.time({
+                rejection <- do.call(test_functions[[test_name]], test_args)
+              })
+              
+              return(list(
+                rejection = rejection,
+                elapsed_time = time_result["elapsed"]
+              ))
             })
             
+            # Extract results
+            result <- sapply(result_list, function(x) x$rejection)
+            time_results <- sapply(result_list, function(x) x$elapsed_time)
+            
             mean_result <- mean(result)
+            avg_time <- mean(time_results)
+            std_time <- sd(time_results)
+            
             results_list[[length(results_list) + 1]] <- data.table(
               test_type = test_type,
               test_name = test_name,
               n = n,
               h_label = h_label,
               estimator = est,
-              rejection_rate = mean_result
+              rejection_rate = mean_result,
+              avg_time_seconds = avg_time,
+              std_time_seconds = std_time
             )
             
-            cat("[Test]", test_name, "| n:", n, "| Estimator:", est, "|", h_label, "| Rejection Rate:", mean_result, "\n", strrep("-", 80), "\n")
+            cat("[Test]", test_name, "| n:", n, "| Estimator:", est, "|", h_label, "| Rejection Rate:", mean_result, "| Avg Time:", round(avg_time, 4), "s\n", strrep("-", 80), "\n")
           }
         } else {
-          result <- pbapply::pbsapply(1:n_sims, function(sim) {
+          result_list <- pbapply::pblapply(1:n_sims, function(sim) {
             seed <- 1203 + sim
             set.seed(seed)
             
@@ -139,20 +157,37 @@ for (n in n_values) {
             epsilon <- 1 / sqrt(log(n))
             test_args <- list(d1$x, d2$x, d1$y, d2$y, alg1 = TRUE, epsilon = epsilon, seed = seed)
             
-            do.call(test_functions[[test_name]], test_args)
+            # Measure execution time and get result
+            time_result <- system.time({
+              rejection <- do.call(test_functions[[test_name]], test_args)
+            })
+            
+            return(list(
+              rejection = rejection,
+              elapsed_time = time_result["elapsed"]
+            ))
           })
           
+          # Extract results
+          result <- sapply(result_list, function(x) x$rejection)
+          time_results <- sapply(result_list, function(x) x$elapsed_time)
+          
           mean_result <- mean(result)
+          avg_time <- mean(time_results)
+          std_time <- sd(time_results)
+          
           results_list[[length(results_list) + 1]] <- data.table(
             test_type = test_type,
             test_name = test_name,
             n = n,
             h_label = h_label,
             estimator = NA,
-            rejection_rate = mean_result
+            rejection_rate = mean_result,
+            avg_time_seconds = avg_time,
+            std_time_seconds = std_time
           )
           
-          cat("[Test]", test_name, "| n:", n, "|", h_label, "| Rejection Rate:", mean_result, "\n", strrep("-", 80), "\n")
+          cat("[Test]", test_name, "| n:", n, "|", h_label, "| Rejection Rate:", mean_result, "| Avg Time:", round(avg_time, 4), "s\n", strrep("-", 80), "\n")
         }
       }
     }

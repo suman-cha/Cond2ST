@@ -50,8 +50,8 @@ cit_test_functions <- list(
   RCIT_test = RCIT_test,
   PCM_test = PCM_test,
   GCM_test = GCM_test,
-  WGSC_test = WGSC_test,
-  KCI_test = KCI_test
+  WGSC_test = WGSC_test
+  # KCI_test = KCI_test
 )
 
 # Regression methods for CIT tests
@@ -213,7 +213,7 @@ for (n in n_values) {
 results_dt <- rbindlist(results_list)
 
 # Define filename and save to CSV
-filename <- paste0("results/computation_costs_", tag, ".csv")
+filename <- paste0("results/appendix/computation_costs/computation_costs_", tag, ".csv")
 fwrite(results_dt, filename, row.names = FALSE)
 cat("Results saved to", filename, "\n")
 
