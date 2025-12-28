@@ -84,7 +84,7 @@ drt_test_functions <- list(
 cit_test_functions <- list(
   RCIT_test = RCIT_test,
   GCM_test = GCM_test,
-  # WGSC_test = WGSC_test,
+  WGSC_test = WGSC_test,
   PCM_test = PCM_test
   # KCI_test = KCI_test
 )
@@ -200,6 +200,6 @@ for (n in n_values) {
 results_dt <- rbindlist(results_list)
 
 # Save the results
-filename <- paste0("results/simulation_results_", tag, ".csv")
+filename <- paste0("results/real_examples/simulation_results_", tag, ".csv")
 fwrite(results_dt, filename, row.names = FALSE)
 cat("Results saved to", filename, "\n")
