@@ -91,24 +91,11 @@ generate_y <- function(x, is_null = TRUE, group = 1L) {
 
 # ---------------------------- Test registries -------------------------------
 drt_test_functions <- list(
-    LinearMMD_test      = LinearMMD_test,
-    CV_LinearMMD_test   = CV_LinearMMD_test,
-    CLF_test            = CLF_test,
-    CV_CLF_test         = CV_CLF_test,
     CP_test             = CP_test,
-    debiased_test       = debiased_test,
-    BlockMMD_test       = BlockMMD_test,
-    CV_BlockMMD_test    = CV_BlockMMD_test,
-    bootstrap_MMD_test  = bootstrap_MMD_test
-)
+    debiased_test       = debiased_test
+    )
 
-cit_test_functions <- list(
-    RCIT_test = RCIT_test,
-    PCM_test  = PCM_test,
-    GCM_test  = GCM_test
-    # WGSC_test = WGSC_test,
-    # KCI_test  = KCI_test
-)
+cit_test_functions <- list()
 
 # ----------------------------- Simulation loop ------------------------------
 n_values <- c(200, 500, 1000, 2000)
@@ -161,7 +148,7 @@ for (n in n_values) {
 
 # ------------------------------ Save results --------------------------------
 results_dt <- rbindlist(results_list)
-filename <- paste0("results/simulation/simulation_results_", tag, ".csv")
+filename <- paste0("results/simulation_results_", tag, "cp_dcp.csv")
 fwrite(results_dt, filename, row.names = FALSE)
 cat("\n", strrep("=", 80), "\n")
 cat("Results saved to", filename, "\n")
