@@ -38,3 +38,9 @@ Thumbs.db
 
 references/
 results/experiments/results/
+
+# Cursor IDE files
+.cursorrules
+
+# LaTeX/TeX files
+tex/

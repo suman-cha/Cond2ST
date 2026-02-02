@@ -25,7 +25,7 @@ install_pkgs <- function(pkgs){
   }
 }
 
-install_pkgs(required_pkgs)
+# install_pkgs(required_pkgs)
 source("./experiments/utils.R")
 source('./experiments/CP_FunFiles.R')
 source("./experiments/CIT_functions.R")
@@ -36,6 +36,17 @@ for (pkg in required_pkgs){
     library(pkg, character.only = TRUE)
     library(RCIT)
   })
+}
+
+# Helper for vectorized kernel calculation
+vectorized_kernel_matrix <- function(x, y, h) {
+  if(is.null(dim(x))) x <- matrix(x, ncol=1)
+  if(is.null(dim(y))) y <- matrix(y, ncol=1)
+  x_norm_sq <- rowSums(x^2)
+  y_norm_sq <- rowSums(y^2)
+  dist_sq <- outer(x_norm_sq, y_norm_sq, "+") - 2 * tcrossprod(x, y)
+  dist_sq[dist_sq < 0] <- 0
+  exp(-dist_sq / (2 * h^2))
 }
 
 # install_github("ericstrobl/RCIT")
@@ -131,27 +142,24 @@ debiased_test <- function(x1, x2, y1, y2, alpha=0.05, est.method="LL", S=2, seed
       
       alpha0 <- predict(alpha_model, est_data0, type = "response")
       alpha1 <- predict(alpha_model, est_data1, type = "response")
-      for (u in 1:length(fold0[[j]])) {
-        for (v in 1:length(fold1[[k]])) {
-          store_values[fold0[[j]][u], fold1[[k]][v]] <- gamma0[u] * as[u, v] + alpha1[v] - gamma0[u] * alpha0[u]
-        }
-      }
+      
+      # Optimized Vectorized Calculation
+      u_idx <- fold0[[j]]
+      v_idx <- fold1[[k]]
+      
+      term1 <- sweep(as, 1, gamma0, "*")
+      term2 <- matrix(alpha1, nrow=length(u_idx), ncol=length(v_idx), byrow=TRUE)
+      term3 <- matrix(gamma0 * alpha0, nrow=length(u_idx), ncol=length(v_idx), byrow=FALSE)
+      
+      store_values[u_idx, v_idx] <- term1 + term2 - term3
     }
   }
   
   value <- sum(store_values) / (nrow(test0) * nrow(test1))
   
   # Variance estimate
-  variance0 <- rep(0, nrow(test0))
-  variance1 <- rep(0, nrow(test1))
-  
-  for (u in 1:nrow(test0)) {
-    variance0[u] <- mean(store_values[u, ]) - 0.5
-  }
-  
-  for (u in 1:nrow(test1)) {
-    variance1[u] <- mean(store_values[, u]) - 0.5
-  }
+  variance0 <- rowMeans(store_values) - 0.5
+  variance1 <- colMeans(store_values) - 0.5
   
   variance0 <- sum(variance0^2) / (nrow(test0) - 1)
   variance1 <- sum(variance1^2) / (nrow(test1) - 1)
@@ -320,77 +328,50 @@ BlockMMD_test <- function(x1, x2, y1, y2, B_size = NULL, prop=0.5, alpha=0.05,
             h_y <- as.numeric(bw)
         }
         
-        # Compute the test statistic
-        test_stat <- MMDb(x12, x22, y12, y22, B_size,
-                          h_x=h_x, h_y=h_y, r_X=r_X2, seed=seed)
+        # Optimized Block MMD Calculation
+        MMD_values <- numeric(num_blocks)
+        for (b in 1:num_blocks){
+            idx <- ((b-1)*B_size+1):(b*B_size)
+            xb1 <- x12[idx,,drop=FALSE]
+            xb2 <- x22[idx,,drop=FALSE]
+            yb1 <- matrix(y12[idx], ncol=1)
+            yb2 <- matrix(y22[idx], ncol=1)
+            rb <- r_X2[idx]
+            
+            B_actual <- length(idx)
+            
+            k_zz_mat <- vectorized_kernel_matrix(xb1, xb1, h_x) * vectorized_kernel_matrix(yb1, yb1, h_y)
+            k_ww_mat <- vectorized_kernel_matrix(xb2, xb2, h_x) * vectorized_kernel_matrix(yb2, yb2, h_y)
+            k_wz_mat <- vectorized_kernel_matrix(xb2, xb1, h_x) * vectorized_kernel_matrix(yb2, yb1, h_y)
+            k_zw_mat <- vectorized_kernel_matrix(xb1, xb2, h_x) * vectorized_kernel_matrix(yb1, yb2, h_y)
+            
+            rb_mat <- outer(rb, rb)
+            
+            sum_k_zz <- sum(k_zz_mat[upper.tri(k_zz_mat)])
+            weighted_k_ww <- rb_mat * k_ww_mat
+            sum_k_ww <- sum(weighted_k_ww[upper.tri(weighted_k_ww)])
+            
+            weighted_k_wz <- sweep(k_wz_mat, 1, rb, "*")
+            sum_k_wz <- sum(weighted_k_wz[upper.tri(weighted_k_wz)])
+            
+            weighted_k_zw <- sweep(k_zw_mat, 2, rb, "*")
+            sum_k_zw <- sum(weighted_k_zw[upper.tri(weighted_k_zw)])
+            
+            sum_k <- sum_k_zz + sum_k_ww - sum_k_wz - sum_k_zw
+            
+            n_pairs <- B_actual*(B_actual - 1) / 2
+            MMD_values[b] <- sum_k / n_pairs
+        }
+        
+        S_bar <- mean(MMD_values)
+        sigma_hat <- sqrt(var(MMD_values))
+        test_stat <- ifelse(sigma_hat >0, sqrt(num_blocks)*S_bar/sigma_hat, 0)
         
         pval <- 1 - pnorm(test_stat)
         rejections[i] <- as.integer(pval < alpha)
     }
     return(rejections)
 }
-
-# CV_BlockMMD_test <- function(x1, x2, y1, y2, B_size = NULL, K = 2, alpha = 0.05,
-#                              bandwidths = c(1), est.method = "LL", seed = NULL) {
-#     if (!is.null(seed)) set.seed(seed)
-#     
-#     stopifnot(nrow(x1) == length(y1), nrow(x2) == length(y2))
-#     total_n <- length(y1)
-#     folds <- sample(rep(1:K, length.out = total_n))
-#     
-#     rejections <- numeric(length(bandwidths))
-#     fold_size <- floor(total_n / K)
-#     if (is.null(B_size)) B_size <- floor(fold_size^(0.5))
-#     
-#     for (i in seq_along(bandwidths)) {
-#         bw <- bandwidths[i]
-#         fold_stats <- numeric(K)
-#         
-#         for (j in 1:K) {
-#             test_idx <- which(folds == j)
-#             est_idx <- which(folds != j)
-#             
-#             x1_est <- x1[est_idx, , drop = FALSE]; y1_est <- y1[est_idx]
-#             x1_test <- x1[test_idx, , drop = FALSE]; y1_test <- y1[test_idx]
-#             x2_est <- x2[est_idx, , drop = FALSE]; y2_est <- y2[est_idx]
-#             x2_test <- x2[test_idx, , drop = FALSE]; y2_test <- y2[test_idx]
-#             
-#             n_test <- length(y1_test)
-#             S <- floor(n_test / B_size)
-#             if (S < 2) {
-#                 warning(paste("Fold", j, "has insufficient test data for >=2 blocks. Skipping."))
-#                 fold_stats[j] <- NA
-#                 next
-#             }
-#             
-#             ratios <- estimate_r(x1_est, x1_test, x2_est, x2_test,
-#                                  y1_est, y1_test, y2_est, y2_test,
-#                                  est.method = est.method, seed = seed + j)
-#             r_X <- 1 / ratios$g22.est
-# 
-#             if (bw == "median") {
-#                 h_x <- median.bandwidth(x1_test, x2_test)
-#                 h_y <- median.bandwidth(matrix(y1_test), matrix(y2_test))
-#             } else {
-#                 h_x <- as.numeric(bw)
-#                 h_y <- as.numeric(bw)
-#             }
-#             
-#             stat_j <- MMDb(x12 = x1_test, x22 = x2_test,
-#                            y12 = y1_test, y22 = y2_test,
-#                            B_size = B_size, h_x = h_x, h_y = h_y,
-#                            r_X = r_X, seed = seed + j)
-#             fold_stats[j] <- stat_j
-#         }
-#         
-#         final_stat <- mean(fold_stats, na.rm = TRUE)
-#         if (is.nan(final_stat)) final_stat <- 0
-#         pval <- 1 - pnorm(final_stat)
-#         rejections[i] <- as.integer(pval < alpha)
-#     }
-#     
-#     return(rejections)
-# }
 
 CV_BlockMMD_test <- function(x1, x2, y1, y2, B_size = NULL, K = 2, alpha = 0.05,
                              bandwidths = c(1), est.method = "LL", seed = NULL) {
@@ -448,26 +429,32 @@ CV_BlockMMD_test <- function(x1, x2, y1, y2, B_size = NULL, K = 2, alpha = 0.05,
                 
                 xb1 <- x1_test[idx,,drop=FALSE]
                 xb2 <- x2_test[idx,,drop=FALSE]
-                yb1 <- y1_test[idx]
-                yb2 <- y2_test[idx]
+                yb1 <- matrix(y1_test[idx], ncol=1)
+                yb2 <- matrix(y2_test[idx], ncol=1)
                 rb <- r_X[idx]
                 
-                sum_k <- 0
+                # Optimized Vectorized Kernel Calculation
                 B_actual <- length(idx)
-                for (ii in 1:(B_actual-1)) {
-                    for (jj in (ii+1):B_actual) {
-                        k_zz <- gaussian.kernel(xb1[ii, ], xb1[jj, ], h_x) * 
-                            gaussian.kernel(yb1[ii], yb1[jj], h_y)
-                        k_ww <- gaussian.kernel(xb2[ii, ], xb2[jj, ], h_x) * 
-                            gaussian.kernel(yb2[ii], yb2[jj], h_y)
-                        k_wz <- gaussian.kernel(xb2[ii, ], xb1[jj, ], h_x) * 
-                            gaussian.kernel(yb2[ii], yb1[jj], h_y)
-                        k_zw <- gaussian.kernel(xb1[ii, ], xb2[jj, ], h_x) * 
-                            gaussian.kernel(yb1[ii], yb2[jj], h_y)
-                        
-                        sum_k <- sum_k + k_zz + rb[ii]*rb[jj]*k_ww - rb[ii]*k_wz - rb[jj]*k_zw
-                    }
-                }
+                
+                k_zz_mat <- vectorized_kernel_matrix(xb1, xb1, h_x) * vectorized_kernel_matrix(yb1, yb1, h_y)
+                k_ww_mat <- vectorized_kernel_matrix(xb2, xb2, h_x) * vectorized_kernel_matrix(yb2, yb2, h_y)
+                k_wz_mat <- vectorized_kernel_matrix(xb2, xb1, h_x) * vectorized_kernel_matrix(yb2, yb1, h_y)
+                k_zw_mat <- vectorized_kernel_matrix(xb1, xb2, h_x) * vectorized_kernel_matrix(yb1, yb2, h_y)
+                
+                rb_mat <- outer(rb, rb)
+                
+                sum_k_zz <- sum(k_zz_mat[upper.tri(k_zz_mat)])
+                weighted_k_ww <- rb_mat * k_ww_mat
+                sum_k_ww <- sum(weighted_k_ww[upper.tri(weighted_k_ww)])
+                
+                weighted_k_wz <- sweep(k_wz_mat, 1, rb, "*")
+                sum_k_wz <- sum(weighted_k_wz[upper.tri(weighted_k_wz)])
+                
+                weighted_k_zw <- sweep(k_zw_mat, 2, rb, "*")
+                sum_k_zw <- sum(weighted_k_zw[upper.tri(weighted_k_zw)])
+                
+                sum_k <- sum_k_zz + sum_k_ww - sum_k_wz - sum_k_zw
+                
                 n_pairs <- B_actual * (B_actual - 1) / 2
                 if (n_pairs > 0) {
                     fold_block_values[b] <- sum_k / n_pairs
