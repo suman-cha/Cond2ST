@@ -37,7 +37,8 @@
 Thumbs.db
 
 references/
-results/experiments/results/
+results/
+Figures/
 
 # Cursor IDE files
 .cursorrules
