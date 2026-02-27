@@ -54,8 +54,8 @@ cit_test_functions <- list(
   RCIT_test = RCIT_test,
   PCM_test = PCM_test,
   GCM_test = GCM_test,
-  WGSC_test = WGSC_test,
-  KCI_test = KCI_test
+  WGSC_test = WGSC_test
+  # KCI_test = KCI_test
 )
 
 # Regression methods for CIT tests (except RCIT)
@@ -117,28 +117,30 @@ for (n in n_values) {
         )
         cat("  Rejection Rate:", mean_result_oracle, "\n")
         
-        # ===== Subsampling Setting =====
+        # ===== Subsampling Setting (same Oracle data, with alg1=TRUE) =====
         cat("[Subsampling]", test_name, "| n:", n, "|", h_label, "\n")
-        sample_sizes <- numeric(n_sims)
         result_subsampling <- pbapply::pbsapply(1:n_sims, function(sim) {
           seed <- 1203 + sim
           set.seed(seed)
-          
-          # Generate data for Group 1 and 2 (standard approach)
-          x1 <- generate_data(n, d, group = 1)
-          y1 <- generate_y(x1, is_null = TRUE)
-          set.seed(seed + n_sims)
-          x2 <- generate_data(n, d, group = 2)
-          y2 <- generate_y(x2, is_null = is_null)
-          
+
+          # Generate the SAME oracle data
+          oracle_data <- generate_oracle_data(n, d, is_null_overall = is_null)
+
+          # Apply subsampling (alg1 = TRUE) on Oracle data
           epsilon <- 1 / sqrt(log(n))
-          test_args <- list(x1, x2, y1, y2, alg1 = TRUE, epsilon = epsilon, seed = seed)
-          
-          # Track effective sample size (would need to modify test function to return this)
-          # For now, we just run the test
+          test_args <- list(
+            x1 = oracle_data$X[oracle_data$Z == 0, , drop = FALSE],
+            x2 = oracle_data$X[oracle_data$Z == 1, , drop = FALSE],
+            y1 = oracle_data$Y[oracle_data$Z == 0],
+            y2 = oracle_data$Y[oracle_data$Z == 1],
+            alg1 = TRUE,
+            epsilon = epsilon,
+            seed = seed
+          )
+
           do.call(cit_test_functions[[test_name]], test_args)
         }, simplify = "array")
-        
+
         mean_result_subsampling <- mean(result_subsampling)
         results_list[[length(results_list) + 1]] <- data.table(
           test_name = test_name,
@@ -147,10 +149,10 @@ for (n in n_values) {
           regression_method = NA_character_,
           setting = "Subsampling",
           rejection_rate = mean_result_subsampling,
-          avg_sample_size = NA_real_  # Would need to track from alg1
+          avg_sample_size = NA_real_
         )
         cat("  Rejection Rate:", mean_result_subsampling, "\n", strrep("-", 80), "\n")
-        
+
       } else {
         # Other CIT tests: test with different regression methods
         for (reg_name in names(regression_methods)) {
@@ -192,28 +194,33 @@ for (n in n_values) {
           )
           cat("  Rejection Rate:", mean_result_oracle, "\n")
           
-          # ===== Subsampling Setting =====
+          # ===== Subsampling Setting (same Oracle data, with alg1=TRUE) =====
           cat("[Subsampling]", test_name, "| n:", n, "| Regression:", reg_name, "|", h_label, "\n")
           result_subsampling <- pbapply::pbsapply(1:n_sims, function(sim) {
             seed <- 1203 + sim
             set.seed(seed)
-            
-            # Generate data for Group 1 and 2 (standard approach)
-            x1 <- generate_data(n, d, group = 1)
-            y1 <- generate_y(x1, is_null = TRUE)
-            set.seed(seed + n_sims)
-            x2 <- generate_data(n, d, group = 2)
-            y2 <- generate_y(x2, is_null = is_null)
-            
+
+            # Generate the SAME oracle data
+            oracle_data <- generate_oracle_data(n, d, is_null_overall = is_null)
+
+            # Apply subsampling (alg1 = TRUE) on Oracle data
             epsilon <- 1 / sqrt(log(n))
             test_args <- c(
-              list(x1, x2, y1, y2, alg1 = TRUE, epsilon = epsilon, seed = seed),
+              list(
+                x1 = oracle_data$X[oracle_data$Z == 0, , drop = FALSE],
+                x2 = oracle_data$X[oracle_data$Z == 1, , drop = FALSE],
+                y1 = oracle_data$Y[oracle_data$Z == 0],
+                y2 = oracle_data$Y[oracle_data$Z == 1],
+                alg1 = TRUE,
+                epsilon = epsilon,
+                seed = seed
+              ),
               regression_methods[[reg_name]]
             )
-            
+
             do.call(cit_test_functions[[test_name]], test_args)
           }, simplify = "array")
-          
+
           mean_result_subsampling <- mean(result_subsampling)
           results_list[[length(results_list) + 1]] <- data.table(
             test_name = test_name,
@@ -222,7 +229,7 @@ for (n in n_values) {
             regression_method = reg_name,
             setting = "Subsampling",
             rejection_rate = mean_result_subsampling,
-            avg_sample_size = NA_real_  # Would need to track from alg1
+            avg_sample_size = NA_real_
           )
           cat("  Rejection Rate:", mean_result_subsampling, "\n", strrep("-", 80), "\n")
         }

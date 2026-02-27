@@ -884,19 +884,21 @@ WGSC_test <- function(x1, x2, y1, y2, alpha=0.05, epsilon=NULL, regr.method=xgbo
     }
     return(rejection)
 }
-RCIT_test <- function(x1, x2, y1, y2, alpha=0.05, epsilon=NULL, alg1=TRUE, seed=NULL, ...) {
+RCIT_test <- function(x1, x2, y1, y2, alpha=0.05, epsilon=NULL, alg1=TRUE, seed=NULL,
+                      num_f=25, num_f2=5, approx="lpd4", ...) {
+    # Note: Default hyperparameters (num_f=25, num_f2=5) are tuned to control Type I error
+    # in challenging scenarios like heavy-tailed distributions (Scenario 4U).
+    # The original defaults (num_f=100, num_f2=5) can lead to inflated Type I error.
     if (!is.null(seed)) {
         set.seed(seed)
     }
     rejection <- 0
     n1 <- length(y1); n2 <- length(y2)
-    
+
     if (alg1 == TRUE) {
         alg1_res <- apply_alg1(x1, x2, y1, y2, seed, epsilon)
         tilde_n1 <- alg1_res$tilde_n1
         tilde_n2 <- alg1_res$tilde_n2
-        # tilde_n1 <- min(tilde_n1, tilde_n2)
-        # tilde_n2 <- tilde_n1
         tilde_n <- tilde_n1 + tilde_n2
         if (tilde_n1 > n1 || tilde_n2 > n2) {
             print("tilde_n1 > n1 || tilde_n2 > n2")
@@ -910,20 +912,21 @@ RCIT_test <- function(x1, x2, y1, y2, alpha=0.05, epsilon=NULL, alg1=TRUE, seed=
             X_merged <- rbind(x1_sample, x2_sample)
             Y_merged <- c(y1_sample, y2_sample)
             Z_merged <- c(rep(0, tilde_n1), rep(1, tilde_n2))
-            
+
             merged_indices <- sample(1:tilde_n, size=tilde_n, replace = FALSE)
             X_merged <- X_merged[merged_indices, , drop = FALSE]
             Y_merged <- Y_merged[merged_indices]
             Z_merged <- Z_merged[merged_indices]
-            rcit.pvalue <- RCIT(x=Y_merged, y=Z_merged, z=X_merged, approx = "lpd4", num_f = 100, num_f2 = 5, seed=seed)$p
+            rcit.pvalue <- RCIT(x=Y_merged, y=Z_merged, z=X_merged,
+                               approx=approx, num_f=num_f, num_f2=num_f2, seed=seed)$p
         }
-    } else {  
+    } else {
         X <- rbind(x1, x2)
         Y <- c(y1, y2)
         Z <- c(rep(0, n1), rep(1, n2))
-        rcit.pvalue <- RCIT(x=Y, y=Z, z=X, approx = "lpd4", num_f = 100, num_f2 = 5, seed=seed)$p
+        rcit.pvalue <- RCIT(x=Y, y=Z, z=X, approx=approx, num_f=num_f, num_f2=num_f2, seed=seed)$p
     }
-    
+
     rejection <- ifelse(rcit.pvalue < alpha, 1, 0)
     return(rejection)
 }
@@ -972,7 +975,7 @@ RCoT_test <- function(x1, x2, y1, y2, alpha=0.05, epsilon=NULL, alg1=TRUE, seed=
   rejection <- ifelse(rcot.pvalue < alpha, 1, 0)
   return(rejection)
 }
-KCI_test <- function(x1, x2, y1, y2, alpha=0.05, epsilon=NULL, GP=TRUE, alg1 = TRUE, seed=NULL){
+KCI_test <- function(x1, x2, y1, y2, alpha=0.05, epsilon=NULL, GP=FALSE, alg1 = TRUE, seed=NULL){
   if (!is.null(seed)) {
     set.seed(seed)
   }

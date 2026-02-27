@@ -107,21 +107,27 @@ MMDb <- function(x12, x22, y12, y22, B_size, h_x=1, h_y=1, r_X, seed=NULL) {
     return(stat)
 }
 
+# Multiplier bootstrap MMD based on main.tex formulation
+# MMD²_Boot = (1/M(M-1)) Σ_{i≠j} ξ_i ξ_j Ĥ(W_i, W_j) where ξ_i ~ N(0,1) i.i.d.
+# The test compares M * MMD²_u with the bootstrap distribution of M * MMD²_Boot
 bootstrap_MMD <- function(x12, x22, y12, y22, h_x=1, h_y=1, r_X, B, seed=NULL){
     if (!is.null(seed)) {
         set.seed(seed)
     }
-    
-    n <- length(y12)
+
+    M <- length(y12)  # M = test sample size
     stopifnot(length(y12) == length(y22))
-    
-    H_hat <- matrix(0, nrow=n, ncol=n)
-    for (i in 1:n){
-        for (j in 1:n) {
+
+    # Compute the kernel matrix Ĥ(W_i, W_j) for all pairs i ≠ j
+    # Ĥ(W_i, W_j) = k(V_i^(1), V_j^(1)) + r̂(X_i^(2))r̂(X_j^(2))k(V_i^(2), V_j^(2))
+    #              - r̂(X_i^(2))k(V_i^(2), V_j^(1)) - r̂(X_j^(2))k(V_i^(1), V_j^(2))
+    H_hat <- matrix(0, nrow=M, ncol=M)
+    for (i in 1:M){
+        for (j in 1:M) {
             if (i != j) {
-                k_zz <- gaussian.kernel(x12[i,,drop=FALSE], x12[j,,drop=FALSE], 
+                k_zz <- gaussian.kernel(x12[i,,drop=FALSE], x12[j,,drop=FALSE],
                                         h_x) * gaussian.kernel(y12[i], y12[j], h_y)
-                k_ww <- gaussian.kernel(x22[i,,drop=FALSE], x22[j,,drop=FALSE], 
+                k_ww <- gaussian.kernel(x22[i,,drop=FALSE], x22[j,,drop=FALSE],
                                         h_x) * gaussian.kernel(y22[i], y22[j], h_y)
                 k_wz <- gaussian.kernel(x22[i,,drop=FALSE], x12[j,,drop=FALSE],
                                         h_x) * gaussian.kernel(y22[i], y12[j], h_y)
@@ -131,16 +137,21 @@ bootstrap_MMD <- function(x12, x22, y12, y22, h_x=1, h_y=1, r_X, B, seed=NULL){
             }
         }
     }
-    obs_stat <- sum(H_hat) / (n*(n-1))
+
+    # Observed statistic: MMD²_u = (1/M(M-1)) Σ_{i≠j} Ĥ_{ij}
+    # Scaled observed statistic: M * MMD²_u
+    obs_stat <- M * sum(H_hat) / (M*(M-1))
+
     bootstrap_stats <- numeric(B)
-    
+
     for (b in 1:B){
-        # Generate n i.i.d. Gaussian random variables
-        W <- rnorm(n)
-        
-        # Calculate the wild boostrap statistic
-        wild_bootstrap_sum <- sum(outer(W,W) * H_hat)
-        bootstrap_stats[b] <- wild_bootstrap_sum / (n*(n-1))
+        # Generate M i.i.d. standard Gaussian multipliers ξ_i ~ N(0,1)
+        xi <- rnorm(M)
+
+        # Multiplier bootstrap statistic: M * MMD²_Boot = M * (1/M(M-1)) Σ_{i≠j} ξ_i ξ_j Ĥ_{ij}
+        # Note: We exclude diagonal terms (i=j) since H_hat[i,i] = 0
+        wild_bootstrap_sum <- sum(outer(xi, xi) * H_hat)
+        bootstrap_stats[b] <- M * wild_bootstrap_sum / (M*(M-1))
     }
     return(list(obs_stat=obs_stat, bootstrap_stats=bootstrap_stats))
 }
