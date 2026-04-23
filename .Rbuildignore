@@ -1,0 +1,38 @@
+# Files excluded from R CMD build / install_github().
+# Note: install_github() honors .Rbuildignore but not .gitignore.
+
+^\.git$
+^\.gitignore$
+^\.github$
+^\.DS_Store$
+^\.vscode$
+^\.idea$
+^\.cursorrules$
+^\.Rproj\.user$
+^.*\.Rproj$
+
+# Reproducibility scripts — ship as a code package, not as a runner.
+^scripts$
+^reproduce_all\.R$
+^setup\.R$
+
+# Generated artifacts (also git-ignored).
+^results$
+^figures$
+^_work$
+
+# Workspace-only scaffolding.
+^archive$
+^bin$
+^jobs$
+^paper$
+^tasks$
+^server_results$
+^renv$
+^README\.md$
+
+# Tests / benches not intended for build install.
+^tests$
+
+# Lockfile is documentation, not a package input.
+^renv\.lock$

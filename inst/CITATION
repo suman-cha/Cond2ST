@@ -1,0 +1,35 @@
+citHeader("To cite Cond2ST in publications, please use both the paper and the software:")
+
+bibentry(
+  bibtype  = "Article",
+  title    = "General frameworks for conditional two-sample testing",
+  author   = c(person("Seongchan", "Lee"),
+               person("Suman",     "Cha"),
+               person("Ilmun",     "Kim")),
+  journal  = "arXiv preprint arXiv:2410.16636",
+  year     = "2024",
+  url      = "https://arxiv.org/abs/2410.16636",
+  textVersion = paste(
+    "Lee, S., Cha, S., and Kim, I. (2024).",
+    "General frameworks for conditional two-sample testing.",
+    "arXiv preprint arXiv:2410.16636.",
+    "URL: https://arxiv.org/abs/2410.16636"
+  )
+)
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "Cond2ST: Reproducibility code for General Frameworks for Conditional Two-Sample Testing",
+  author   = c(person("Seongchan", "Lee"),
+               person("Suman",     "Cha"),
+               person("Ilmun",     "Kim")),
+  year     = "2024",
+  note     = "R package version 1.0.0",
+  url      = "https://github.com/suman-cha/Cond2ST",
+  textVersion = paste(
+    "Lee, S., Cha, S., and Kim, I. (2024).",
+    "Cond2ST: Reproducibility code for General Frameworks for",
+    "Conditional Two-Sample Testing. R package version 1.0.0.",
+    "URL: https://github.com/suman-cha/Cond2ST"
+  )
+)

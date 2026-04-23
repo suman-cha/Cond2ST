@@ -1,4 +1,51 @@
-.Rproj.user
+# macOS
+.DS_Store
+._*
+
+# R
 .Rhistory
 .RData
-.Ruserdata
+.Rproj.user/
+*.Rproj
+.Rapp.history
+
+# Editor / IDE
+.vscode/
+.idea/
+.cursorrules
+*.swp
+*.swo
+*~
+
+# Generated outputs (never commit)
+results/
+figures/
+**/results/
+**/figures/
+
+# Cluster / job artifacts
+slurm-*.out
+*.out
+*.err
+
+# Plot scripts (workspace-only — paper publishes the rendered PDF)
+plot_*.R
+**/plot_*.R
+
+# Internal exploration / setting-search scripts (workspace-only)
+**/cv_quadmmd_all.R
+**/calibrate_cf.R
+**/ck_drt_flex.R
+**/computation_cost_n2000.R
+
+# Internal test/benchmark fixtures (workspace-only)
+tests/
+
+# Logs
+*.log
+error_log.txt
+
+# Compiled native code
+*.o
+*.so
+*.dll

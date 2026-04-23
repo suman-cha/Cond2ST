@@ -1,0 +1,52 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite both the software itself and the
+  accompanying paper (preferred citation below).
+title: "Cond2ST: Reproducibility code for General Frameworks for Conditional Two-Sample Testing"
+abstract: >-
+  R reproducibility package for the paper "General Frameworks for Conditional
+  Two-Sample Testing" (Lee, Cha, and Kim, 2024). Implements Algorithm 1
+  (subsampling-based reduction of conditional two-sample testing to conditional
+  independence testing) together with the density-ratio-based and
+  conditional-kernel test families used as baselines.
+type: software
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/suman-cha/Cond2ST"
+url: "https://arxiv.org/abs/2410.16636"
+authors:
+  - given-names: Seongchan
+    family-names: Lee
+    email: statchan1106@yonsei.ac.kr
+    affiliation: Yonsei University
+  - given-names: Suman
+    family-names: Cha
+    email: oldrain123@yonsei.ac.kr
+    affiliation: Yonsei University
+  - given-names: Ilmun
+    family-names: Kim
+    email: ilmun@yonsei.ac.kr
+    affiliation: Yonsei University
+preferred-citation:
+  type: article
+  title: "General frameworks for conditional two-sample testing"
+  authors:
+    - given-names: Seongchan
+      family-names: Lee
+    - given-names: Suman
+      family-names: Cha
+    - given-names: Ilmun
+      family-names: Kim
+  journal: "arXiv preprint arXiv:2410.16636"
+  year: 2024
+  url: "https://arxiv.org/abs/2410.16636"
+  identifiers:
+    - type: other
+      value: "arXiv:2410.16636"
+      description: arXiv preprint
+keywords:
+  - conditional two-sample testing
+  - conditional independence testing
+  - density ratio estimation
+  - kernel methods
+  - reproducibility

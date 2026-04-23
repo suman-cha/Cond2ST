@@ -1,66 +1,149 @@
-# Cond2ST: General Frameworks for Conditional Two-Sample Testing
+# Cond2ST
 
-This repository contains the R codes for reproducing the experimental results presented in the paper "General Frameworks for Conditional Two-sample Testing" [arxiv](https://arxiv.org/abs/2410.16636). 
-The paper introduces general methodologies for conditional two-sample testing, aiming to determine whether two populations have the same distributions after accounting for confounding variables. We introduce two approaches: (1) converting conditional independence tests to conditional two-sample tests and (2) density ratio-based testing. If you are planning to do tests for your own projects, we recommend to use R package named "Cond2ST". 
+Reproducibility code for *General frameworks for conditional two-sample
+testing* (Lee, Cha, Kim, 2024).
+[arXiv:2410.16636](https://arxiv.org/abs/2410.16636).
 
-## Getting Started 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![R \>= 4.0](https://img.shields.io/badge/R-%3E%3D%204.0-blue.svg)](https://cran.r-project.org/)
+[![Cite](https://img.shields.io/badge/cite-CITATION.cff-green.svg)](./CITATION.cff)
 
-### Installation
+Given two samples \((X_j, Y_j) \sim P_j\), \(j = 1, 2\), test whether the
+conditional distributions \(Y \mid X\) coincide. Two general frameworks,
+both proved to control type-I error and to be consistent:
 
-To get started with the repository, clone it to your local machine:
+- **CIT route** — Algorithm 1 reduces the problem to a conditional
+  independence test, so any CIT (GCM, PCM, RCIT, WGSC, ...) drops in.
+- **Density-ratio route** — estimate \(p_1(x)/p_2(x)\) once, plug it into a
+  weighted MMD or classifier-based two-sample statistic.
+
+## Citation
+
+```bibtex
+@article{lee2024general,
+  title   = {General frameworks for conditional two-sample testing},
+  author  = {Lee, Seongchan and Cha, Suman and Kim, Ilmun},
+  journal = {arXiv preprint arXiv:2410.16636},
+  year    = {2024}
+}
+```
+
+In R: `citation("Cond2ST")`. For the software citation, GitHub's *Cite
+this repository* widget reads [`CITATION.cff`](./CITATION.cff).
+
+## Installation
 
 ```sh
 git clone https://github.com/suman-cha/Cond2ST.git
 cd Cond2ST
+Rscript setup.R
 ```
 
-### Requirements
+Or as an R package:
 
-Make sure you have R installed (version 4.0 or higher) along with the necessary packages.
-
-### Run Experiments 
-The experiments in the paper can be reproduced using the R codes provided in the experiments/ directory. Each code corresponds to an experiment discussed in the paper.
-
-1. **Prepare the Data**: The superconductivity dataset used in the real data experiments are included in the `real_examples/data/` folder. Or you can download data yourself from [superconductivity](https://archive.ics.uci.edu/dataset/464/superconductivty+data). Make sure the data is in the correct format before running the scripts. Other simulation data are generated in each code. 
-
-2. **Run Scripts**: Navigate to the `experiments/` folder and run the desired experiment script. For example:
-   ```sh
-   Rscript experiments/scenarios/scenario1u.R
-   ```
-   The results will be saved in the `results/` folder.
-
-
-
-## Citation
-
-If you find this code useful for your research, please cite the paper:
-
-```bibtex
-@misc{lee2024generalframeworksconditionaltwosample,
-      title={General Frameworks for Conditional Two-Sample Testing},
-      author={Seongchan Lee and Suman Cha and Ilmun Kim},
-      year={2024},
-      eprint={2410.16636},
-      archivePrefix={arXiv},
-      primaryClass={stat.ML},
-      url={https://arxiv.org/abs/2410.16636},
-}
+```r
+remotes::install_github("suman-cha/Cond2ST")
 ```
 
-## Contact
+`setup.R` installs CRAN dependencies plus five GitHub-only packages
+(`RCIT`, `CondIndTests`, `KDist`, `GCM`, `vimp`). A C++17 toolchain is
+required to compile `KDist` and the bundled Rcpp MMD kernels.
 
-For questions or issues regarding the code, please do not hesitate to contact us!
+## Data
 
-Seongchan Lee* : statchan1106@yonsei.ac.kr
+| Dataset | Source | License | Loaded via |
+|---|---|---|---|
+| `superconductivity.csv` | UCI ML Repository, dataset 464 ([Hamidieh, 2018](https://archive.ics.uci.edu/dataset/464/superconductivty+data)) | CC BY 4.0 | `data/superconductivity.csv` (21 263 × 82, shipped) |
+| `diamonds` | `ggplot2::diamonds` (Wickham, 2016) | GPL-2 (via ggplot2) | Loaded at runtime; not stored in repo |
 
-Suman Cha* : oldrain123@yonsei.ac.kr 
+See [`data/README.md`](./data/README.md) for schema and preprocessing
+notes. Both datasets are used as-is; the runners normalize features at
+use time via `apply(X, 2, normalize)`.
 
-Ilmun Kim : ilmun@yonsei.ac.kr 
+## Repository layout
+
+```
+R/                # library functions, sourced via R/load_all.R
+src/              # Rcpp accelerator for the MMD kernels
+data/             # superconductivity.csv (UCI mirror)
+scripts/main/     # main-paper experiments
+scripts/appendix/ # appendix experiments
+inst/             # CITATION (citation()), sessionInfo.txt (frozen env)
+reproduce_all.R   # master runner
+setup.R           # one-time dependency install
+renv.lock         # frozen package versions (renv::restore())
+```
+
+## Reproduce
+
+### Smoke test (~2 min)
+
+```sh
+CDTST_N_REP=20 CDTST_SCENARIOS=S1U Rscript scripts/main/scenarios_1_3.R
+```
+
+Outputs land in `results/main/`.
+
+### Full reproduction (60–120 h, single core)
+
+```sh
+Rscript reproduce_all.R
+```
+
+`CDTST_CORES=N` (or `options(cdtst.cores = N)`) shards the Monte-Carlo
+sweep across `N` workers; the serial and parallel paths are
+bit-identical (per-rep RNG state is reset before any output-affecting
+draw). Common environment overrides are documented in
+[`scripts/README.md`](./scripts/README.md).
+
+### Paper-to-script map
+
+| Artifact | Script |
+|---|---|
+| Figs 1–3 | `scripts/main/scenarios_1_3.R` |
+| Figs 4, 6 | `scripts/main/real_data.R` |
+| Fig 5 | `scripts/appendix/density_ratio.R` |
+| Figs 7–8 | `scripts/appendix/scenarios_4_5.R` |
+| Fig 9 | `scripts/appendix/bandwidth.R` |
+| Fig 10 | `scripts/appendix/computation_cost.R` |
+| Table 2 | `scripts/appendix/algorithm1.R` |
+| Table 3 | `scripts/appendix/epsilon.R` |
+| Table 4 | `scripts/appendix/kstar.R` |
+| App. A.10 | `scripts/appendix/oracle_cit.R` |
+| App. tables (CIT split, non-CV DRT, 10-test real data) | `scripts/appendix/{split_ratio,scenarios_1_3,real_data,scenarios_4_5_single}.R` |
+
+The full table with output filenames lives in
+[`scripts/README.md`](./scripts/README.md).
+
+## Computational requirements
+
+- **R** ≥ 4.0, **C++17** toolchain (for `KDist` and the Rcpp MMD kernels).
+- **RAM** ≥ 16 GB recommended; per-worker footprint stays under 4 GB.
+- **No GPU.**
+- **Wall time** at `n_rep = 500`: full sweep ≈ 60–120 h on one core.
+  Embarrassingly parallel across reps (`CDTST_CORES=8` brings this to
+  ~10–15 h on an 8-core workstation).
+- Tested on macOS 14 (arm64) and Linux (x86_64).
+
+## Reproducibility notes
+
+- Every Monte-Carlo runner resets the per-rep RNG with
+  `set.seed(seed_base + sim)` before generating data; every `*_test()`
+  function starts with `if (!is.null(seed)) set.seed(seed)` before any
+  output-affecting RNG draw. Reseeding makes the parallel path
+  bit-identical to the serial path.
+- Algorithm 1 default shrinkage: `eps = 1/sqrt(log(n))`.
+- Frozen package versions are pinned in [`renv.lock`](./renv.lock);
+  restore with `renv::restore()`. The exact session captured at paper
+  submission is in [`inst/sessionInfo.txt`](./inst/sessionInfo.txt).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+[MIT](./LICENSE).
 
-## Acknowledgments
+## Acknowledgements
 
-We acknowledge support from the Basic Science Research Program through the National Research Foundation of Korea (NRF) funded by the Ministry of Education (2022R1A4A1033384), and the Korea government (MSIT) RS-2023-00211073.
+National Research Foundation of Korea (2022R1A4A1033384) and the Korean
+government MSIT (RS-2023-00211073).
+
+Issues and questions: <https://github.com/suman-cha/Cond2ST/issues>.

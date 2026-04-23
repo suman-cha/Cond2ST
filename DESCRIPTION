@@ -1,0 +1,76 @@
+Package: Cond2ST
+Type: Reproducibility
+Title: General Frameworks for Conditional Two-Sample Testing
+Version: 1.0.0
+Authors@R: c(
+    person("Seongchan", "Lee", role = c("aut"),
+           email = "statchan1106@yonsei.ac.kr"),
+    person("Suman", "Cha", role = c("aut", "cre"),
+           email = "oldrain123@yonsei.ac.kr"),
+    person("Ilmun", "Kim", role = c("aut"),
+           email = "ilmun@yonsei.ac.kr"))
+Description: Reproducibility package for the paper "General Frameworks for
+    Conditional Two-Sample Testing" (Lee, Cha, and Kim, 2024). Implements
+    Algorithm 1 (subsampling-based reduction of conditional two-sample
+    testing to conditional independence testing) together with the
+    density-ratio-based and conditional-kernel test families used as
+    baselines. Reproduces all main-paper figures and appendix results.
+URL: https://github.com/suman-cha/Cond2ST,
+    https://arxiv.org/abs/2410.16636
+BugReports: https://github.com/suman-cha/Cond2ST/issues
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends:
+    R (>= 4.0.0)
+Imports:
+    MASS,
+    pbapply,
+    data.table,
+    tmvtnorm,
+    ranger,
+    xgboost,
+    glmnet,
+    e1071,
+    kernlab,
+    caret,
+    mgcv,
+    nnet,
+    recipes,
+    SuperLearner,
+    foreach,
+    doSNOW,
+    doRNG,
+    progress,
+    prettyunits,
+    plyr,
+    CVST,
+    ANN2,
+    stabs,
+    densratio,
+    Rcpp,
+    ggplot2,
+    dplyr,
+    tidyr,
+    stringr,
+    scales,
+    grid,
+    gridExtra,
+    latex2exp,
+    ggrepel,
+    forcats,
+    purrr,
+    readr,
+    withr,
+    R.utils,
+    microbenchmark,
+    RCIT,
+    GeneralisedCovarianceMeasure,
+    CondIndTests,
+    KDist,
+    vimp
+Remotes:
+    ericstrobl/RCIT,
+    zhangxiany-tamu/KDist
+LinkingTo: Rcpp
+SystemRequirements: C++17
+RoxygenNote: 7.3.1
