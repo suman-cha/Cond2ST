@@ -12,10 +12,10 @@ Given two samples \((X_j, Y_j) \sim P_j\), \(j = 1, 2\), test whether the
 conditional distributions \(Y \mid X\) coincide. Two general frameworks,
 both proved to control type-I error and to be consistent:
 
-- **CIT route** — Algorithm 1 reduces the problem to a conditional
+- **CIT-based Approach** — Algorithm 1 reduces the problem to a conditional
   independence test, so any CIT (GCM, PCM, RCIT, WGSC, ...) drops in.
-- **Density-ratio route** — estimate \(p_1(x)/p_2(x)\) once, plug it into a
-  weighted MMD or classifier-based two-sample statistic.
+- **Density-ratio-based Approach** — estimate \(p_1(x)/p_2(x)\) once, plug
+  it into a weighted MMD or classifier-based two-sample statistic.
 
 ## Citation
 
@@ -141,13 +141,20 @@ The full table with output filenames lives in
 
 [MIT](./LICENSE).
 
-## Authors
+## Contact
 
-Seongchan Lee\* (<statchan1106@yonsei.ac.kr>),
-Suman Cha\* (<oldrain123@yonsei.ac.kr>),
-Ilmun Kim (<ilmun@yonsei.ac.kr>). \*equal contribution.
+For questions or issues regarding the code, please do not hesitate to
+contact us!
 
-Issues and questions: <https://github.com/suman-cha/Cond2ST/issues>.
+Seongchan Lee\* : <statchan1106@yonsei.ac.kr>
+
+Suman Cha\* : <oldrain123@yonsei.ac.kr>
+
+Ilmun Kim : <ilmun@yonsei.ac.kr>
+
+\*equal contribution.
+
+Issues: <https://github.com/suman-cha/Cond2ST/issues>.
 
 ## Acknowledgements
 
