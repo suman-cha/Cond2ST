@@ -17,20 +17,6 @@ both proved to control type-I error and to be consistent:
 - **Density-ratio-based Approach** — estimate \(p_1(x)/p_2(x)\) once, plug
   it into a weighted MMD or classifier-based two-sample statistic.
 
-## Citation
-
-```bibtex
-@article{lee2024general,
-  title   = {General frameworks for conditional two-sample testing},
-  author  = {Lee, Seongchan and Cha, Suman and Kim, Ilmun},
-  journal = {arXiv preprint arXiv:2410.16636},
-  year    = {2024}
-}
-```
-
-In R: `citation("Cond2ST")`. For the software citation, GitHub's *Cite
-this repository* widget reads [`CITATION.cff`](./CITATION.cff).
-
 ## Installation
 
 ```sh
@@ -136,6 +122,22 @@ The full table with output filenames lives in
 - Frozen package versions are pinned in [`renv.lock`](./renv.lock);
   restore with `renv::restore()`. The exact session captured at paper
   submission is in [`inst/sessionInfo.txt`](./inst/sessionInfo.txt).
+
+## Citation
+
+If you find this code useful for your research, please cite the paper:
+
+```bibtex
+@article{lee2024general,
+  title   = {General frameworks for conditional two-sample testing},
+  author  = {Lee, Seongchan and Cha, Suman and Kim, Ilmun},
+  journal = {arXiv preprint arXiv:2410.16636},
+  year    = {2024}
+}
+```
+
+In R: `citation("Cond2ST")`. For the software citation, GitHub's *Cite
+this repository* widget reads [`CITATION.cff`](./CITATION.cff).
 
 ## License
 
