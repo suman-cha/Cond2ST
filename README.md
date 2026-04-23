@@ -141,9 +141,15 @@ The full table with output filenames lives in
 
 [MIT](./LICENSE).
 
+## Authors
+
+Seongchan Lee\* (<statchan1106@yonsei.ac.kr>),
+Suman Cha\* (<oldrain123@yonsei.ac.kr>),
+Ilmun Kim (<ilmun@yonsei.ac.kr>). \*equal contribution.
+
+Issues and questions: <https://github.com/suman-cha/Cond2ST/issues>.
+
 ## Acknowledgements
 
 National Research Foundation of Korea (2022R1A4A1033384) and the Korean
 government MSIT (RS-2023-00211073).
-
-Issues and questions: <https://github.com/suman-cha/Cond2ST/issues>.
